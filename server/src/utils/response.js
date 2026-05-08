@@ -1,17 +1,20 @@
-function successResponse(res, data, message = "Operation successful") {
-  return res.status(200).json({
-    code: 200,
-    message: message,
-    data: data,
-  });
-}
-
-function errorResponse(res, message, code) {
+export function successResponse(res, data, message = "Operation successful", code = 200) {
   return res.status(code).json({
-    code: code,
-    message: message,
-    error: true,
+    ok: true,
+    code,
+    message,
+    data,
   });
 }
 
-module.exports = { successResponse, errorResponse };
+export function errorResponse(res, message, code = 500, details = null) {
+  return res.status(code).json({
+    ok: false,
+    code,
+    message,
+    error: true,
+    details: details,
+  });
+}
+
+//module.exports = { successResponse, errorResponse };
