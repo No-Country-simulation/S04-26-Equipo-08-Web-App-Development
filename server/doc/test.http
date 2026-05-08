@@ -1,0 +1,25 @@
+### NorthPay Backend - Test API
+
+@baseUrl = http://localhost:3000/api
+
+### Health Check & Database Connection
+# Verifica si el servidor está corriendo y si hay conexión con PostgreSQL
+GET {{baseUrl}}/health
+Accept: application/json
+
+### Admin Check
+# Verifica si el usuario administrador por defecto existe en la base de datos
+GET {{baseUrl}}/admin-check
+Accept: application/json
+
+### Ejemplos adicionales (Futuros endpoints)
+
+# GET {{baseUrl}}/users
+# Accept: application/json
+
+# POST {{baseUrl}}/auth/login
+# Content-Type: application/json
+# {
+#   "email": "test@northpay.com",
+#   "password": "password123"
+# }
