@@ -32,7 +32,7 @@ export default function PublicHeader() {
           <Link href="/register" className="text-on-surface-variant hover:text-primary transition-colors duration-200">
             <FiUsers />
           </Link>
-          <Link href="/private/login" className="text-on-surface-variant hover:text-primary transition-colors duration-200">
+          <Link href="/auth/login" className="text-on-surface-variant hover:text-primary transition-colors duration-200">
             <GrUserAdmin />
           </Link>
         </div>
