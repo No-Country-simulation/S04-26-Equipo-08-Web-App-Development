@@ -1,26 +1,142 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  /* COLORS */
+  --background: #e8eaf0;
   --foreground: #171717;
+
+  --primary: #6366f1;
+  --primary-container: #818cf8;
+  --primary-fixed: #e0e2ff;
+  --primary-fixed-dim: #a5b4fc;
+
+  --secondary: #6c6e7e;
+  --secondary-container: #d8dae6;
+
+  --tertiary: #7c3aed;
+  --tertiary-container: #a78bfa;
+
+  --surface: #e8eaf0;
+  --surface-dim: #d4d6dc;
+  --surface-bright: #edeef4;
+
+  --surface-container: #e2e4ea;
+  --surface-container-low: #e5e7ed;
+  --surface-container-high: #dcdee4;
+  --surface-container-highest: #d6d8de;
+
+  --surface-variant: #dcdee4;
+
+  --on-surface: #2e3040;
+  --on-surface-variant: #585a68;
+
+  --outline: #8a8c9a;
+  --outline-variant: #d0d2dc;
+
+  --error: #dc2626;
+  --error-container: #fee2e2;
+
+  /* TYPOGRAPHY */
+  --font-sans: var(--font-plus-jakarta-sans);
+
+  /* RADIUS */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-full: 9999px;
+
+  /* SHADOWS */
+  --shadow-neomorph-raised:
+    6px 6px 12px rgba(0, 0, 0, 0.08),
+    -6px -6px 12px rgba(255, 255, 255, 0.6);
+
+  --shadow-neomorph-inset:
+    inset 4px 4px 8px rgba(0, 0, 0, 0.06),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.5);
 }
 
 @theme inline {
+  /* COLORS */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary: var(--primary);
+  --color-primary-container: var(--primary-container);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-container: var(--secondary-container);
+
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+
+  --color-surface-variant: var(--surface-variant);
+
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+
+  --color-error: var(--error);
+  --color-error-container: var(--error-container);
+
+  /* FONTS */
+  --font-sans: var(--font-plus-jakarta-sans);
+
+  /* RADIUS */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+
+  /* SHADOWS */
+  --shadow-neomorph-raised: var(--shadow-neomorph-raised);
+  --shadow-neomorph-inset: var(--shadow-neomorph-inset);
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--on-surface);
+  font-family: var(--font-plus-jakarta-sans);
+}
+
+@layer base {
+  * {
+    border-color: var(--outline-variant);
+  }
+}
+
+@layer components {
+  .neo-raised {
+    box-shadow: var(--shadow-neomorph-raised);
+    background-color: var(--background);
+    border-radius: 1rem;
+  }
+
+  .neo-inset {
+    box-shadow: var(--shadow-neomorph-inset);
+    background-color: var(--background);
+    border-radius: 1rem;
+  }
+
+  .surface-card {
+    @apply bg-surface-container rounded-xl p-4;
+  }
+
+  .primary-button {
+    @apply bg-primary text-white rounded-xl px-4 py-2 transition-all;
+  }
+
+  .primary-button:hover {
+    @apply opacity-90;
+  }
 }

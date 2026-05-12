@@ -1,10 +1,15 @@
+import BenefitsSection from "./components/landing/benefits/benefits-section";
+import CTASection from "./components/landing/cta/cta-section";
+import HeroSection from "./components/landing/hero/hero-seection";
+import Header from "./components/layout/headers/header";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center ">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 ">
-        
-      </main>
+    <div className="bg-background text-on-surface font-body min-h-screen flex flex-col">
+      <Header />
+      <HeroSection />
+      <BenefitsSection />
+      <CTASection />
     </div>
   );
 }
