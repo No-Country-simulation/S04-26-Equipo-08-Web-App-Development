@@ -1,11 +1,12 @@
 import { ApiResponse } from "@/types/api.types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL;
 
 export async function apiFetch<T>(
   endpoint: string,
   options?: RequestInit
-): Promise<ApiResponse<T>> {
+): Promise<T> {
 
   const response = await fetch(
     `${API_URL}${endpoint}`,
@@ -15,5 +16,9 @@ export async function apiFetch<T>(
   const result: ApiResponse<T> =
     await response.json();
 
-  return result;
+  if (!result.ok) {
+    throw new Error(result.message);
+  }
+
+  return result.data;
 }
