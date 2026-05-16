@@ -4,15 +4,16 @@ import path from "path";
 import { db } from "../config/database.js";
 
 export const runMigrations = async () => {
-
   try {
-
     console.log("🚀 Running database migrations...");
 
-    const __dirname = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([a-zA-Z]:)/, '$1');
-
+    //const __dirname = path
+    //  .dirname(new URL(import.meta.url).pathname)
+    //  .replace(/^\/([a-zA-Z]:)/, "$1");
+    //console.log(__dirname);
+    const __dirname = process.env.RELATIVE_PATH
     const initPath = path.join(__dirname, "init.sql");
-
+    console.log(__dirname);
     const schemaPath = path.join(__dirname, "schema.sql");
 
     const seedPath = path.join(__dirname, "seed.sql");
@@ -40,12 +41,9 @@ export const runMigrations = async () => {
     await db.query(seedSQL);
 
     console.log("✅ seed.sql executed");
-
   } catch (error) {
-
     console.error("❌ Migration error:");
 
     console.error(error);
-
   }
 };

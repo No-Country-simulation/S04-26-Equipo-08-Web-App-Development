@@ -12,18 +12,16 @@ const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
-
     console.log("\n🚀 Starting NorthPay Backend...\n");
 
     // Verificar conexión DB
     await checkDatabase();
 
     // Ejecutar migraciones automáticas
-    await runMigrations();
+    //await runMigrations();
 
     // Iniciar servidor
     app.listen(PORT, () => {
-
       console.log("\n-----------------------------------");
 
       console.log(`✅ Server running on port ${PORT}`);
@@ -31,15 +29,12 @@ const startServer = async () => {
       console.log(`🌍 http://localhost:${PORT}`);
 
       console.log("-----------------------------------\n");
-
     });
-
   } catch (error) {
-
+  
     console.error("❌ Fatal server error:");
 
     console.error(error.message);
-
   }
 };
 

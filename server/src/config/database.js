@@ -6,16 +6,15 @@ dotenv.config();
 const { Pool } = pg;
 
 export const db = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL_LOCAL,
 
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  //ssl: {
+  //  rejectUnauthorized: true,
+  //},
 });
 
 export const checkDatabase = async () => {
   try {
-
     const client = await db.connect();
 
     console.log("✅ PostgreSQL connected");
@@ -25,9 +24,8 @@ export const checkDatabase = async () => {
     console.log("🕒 DB Time:", result.rows[0]);
 
     client.release();
-
   } catch (error) {
-
+    
     console.error("❌ PostgreSQL error:");
 
     console.error(error.message);
