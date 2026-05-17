@@ -23,3 +23,11 @@ Accept: application/json
 #   "email": "test@northpay.com",
 #   "password": "password123"
 # }
+### Get Users 
+GET {{baseUrl}}/users 
+Accept: application/json
+
+### Get User By ID
+#Reemplaza el ID con uno válido de tu base de datos para probar la consulta
+GET {{baseUrl}}/users/94c298e4-33fe-4a44-99b9-1b4c3ec70a88
+Accept: application/json
