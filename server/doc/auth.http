@@ -1,6 +1,6 @@
 ### NorthPay Backend - Authentication API
 
-@baseUrl = http://localhost:3001
+@baseUrl = http://localhost:3001/api/v1
 
 ### Endpoint Seed Admin
 # Este endpoint se utiliza para crear un usuario admin por defecto en la base de datos. Solo

@@ -2,8 +2,14 @@
 import { LoginFormData, loginSchema } from "@/schema/loginSchema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLogin } from "@/hooks/queries/useLogin";
+import { useAppToast } from "@/app/providers/ToastProvider";
+
 
 export default function LoginForm() {
+  const loginMutation = useLogin();
+  const { showToast } =
+    useAppToast();
   const {
     register,
     handleSubmit,
@@ -21,17 +27,31 @@ export default function LoginForm() {
   });
 
   async function onSubmit(
-    data: LoginFormData
-  ) {
-    try {
-      console.log(data);
+  data: LoginFormData
+) {
+  
+  try {
 
-      // TODO:
-      // login mutation here
+  const response =
+    await loginMutation
+      .mutateAsync(data);
 
-    } catch (error) {
-      console.error(error);
-    }
+  showToast(
+    "Login successful",
+    undefined,
+    "success"
+  );
+
+} catch (error) {
+
+  showToast(
+    typeof error === "string"
+      ? error
+      : "Unexpected error",
+    undefined,
+    "error"
+  );
+}
   }
 
   return (

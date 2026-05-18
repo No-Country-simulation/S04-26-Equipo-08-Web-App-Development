@@ -9,7 +9,7 @@ export async function apiFetch<T>(
 ): Promise<T> {
 
   const response = await fetch(
-    `${API_URL}${endpoint}`,
+    `${API_URL}/v1${endpoint}`,
     options
   );
 
@@ -17,7 +17,7 @@ export async function apiFetch<T>(
     await response.json();
 
   if (!result.ok) {
-    throw new Error(result.message);
+    return Promise.reject(result.message);
   }
 
   return result.data;

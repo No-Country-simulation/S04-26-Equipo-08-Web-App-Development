@@ -3,58 +3,52 @@
 import { db } from "../../config/database.js";
 import bcrypt from "bcrypt";
 
-export const seedAdmin = async (req, res) => {
-  try {
-    const password = "Admin";
+// controllers/seed/seedAdmin.js
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+export const seedAdmin = async () => {
 
-    // Verificar si ya existe
-    const existingUser = await db.query(
+  const existingUser =
+    await db.query(
       "SELECT * FROM users WHERE email = $1",
       ["admin@admin"]
     );
 
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({
-        message: "Admin already exists",
-      });
-    }
+  if (
+    existingUser.rows.length > 0
+  ) {
+    throw new Error(
+      "Admin already exists"
+    );
+  }
 
-    // Crear admin
-    const result = await db.query(
-      `
-      INSERT INTO users (
-        email,
-        password,
-        role,
-        firstname,
-        lastname,
-        is_active
-      )
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *;
-      `,
-      [
-        "admin@admin",
-        hashedPassword,
-        "admin",
-        "Super",
-        "Admin",
-        true,
-      ]
+  const hashedPassword =
+    await bcrypt.hash(
+      "Admin",
+      10,
     );
 
-    return res.status(201).json({
-      message: "Admin created successfully",
-      user: result.rows[0],
-    });
-  } catch (error) {
-    console.error(error);
+  const result = await db.query(
+    `
+    INSERT INTO users (
+      email,
+      password,
+      role,
+      firstname,
+      lastname,
+      is_active
+    )
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *;
+    `,
+    [
+      "admin@admin.com",
+      hashedPassword,
+      "admin",
+      "Super",
+      "Admin",
+      true,
+    ]
+  );
 
-    return res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
-  }
+  return result.rows[0];
 };

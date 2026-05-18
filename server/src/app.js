@@ -16,10 +16,23 @@ const app = express();
 // Configuración CORS
 app.use(
   cors({
-    origin: "*", // Puedes restringir esto a tus dominios específicos si lo prefieres
+    origin: "http://localhost:3000",
     credentials: true,
-    methods: "GET, POST, OPTIONS, PUT, PATCH, DELETE",
-    allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+    ],
   }),
 );
 
@@ -28,14 +41,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 app.use(morgan("dev"));
-app.use("/", routes);
+app.use("/api/v1", routes);
 
 //sendTheWhats();
 //app.use("/api", testRoutes);
 
 //Rutas 
 
-app.use('/seed', adminRoutes)
+app.use('/api/v1/seed', adminRoutes)
 
 app.use(errorMiddleware);
 
