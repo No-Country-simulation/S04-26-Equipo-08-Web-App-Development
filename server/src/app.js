@@ -8,6 +8,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import bodyParser from "body-parser";
+import { authenticateToken } from "./utils/jwt.js";
 dotenv.config();
 
 const app = express();
@@ -26,6 +27,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 app.use(morgan("dev"));
+app.use(authenticateToken());
 app.use("/", routes);
 app.use(errorMiddleware);
 
