@@ -1,0 +1,32 @@
+### NorthPay Backend - Authentication API
+
+@baseUrl = http://localhost:3001
+
+### Endpoint Seed Admin
+# Este endpoint se utiliza para crear un usuario admin por defecto en la base de datos. Solo
+
+POST {{baseUrl}}/seed/seed-admin
+Content-Type: application/json
+
+### Login User
+# Aquí el User se "Loggea" hacia la plataforma
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "email": "admin@admin",
+    "password": "Admin"
+}
+### Register User
+# Registra al usuario independientemente de su rol (validación básica)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "email": "something3@gmail.com",
+    "password": "superSecurepassword132",
+    "role": "contractor",
+    "firstname": "Mr",
+    "lastname": "Glass",
+    "phone": "+594353582975372"
+}

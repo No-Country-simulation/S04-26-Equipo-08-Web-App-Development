@@ -1,6 +1,6 @@
 ### NorthPay Backend - Test API
 
-@baseUrl = http://localhost:3000
+@baseUrl = http://localhost:3001
 
 ### Login User
 # Aquí el User se "Loggea" hacia la plataforma
