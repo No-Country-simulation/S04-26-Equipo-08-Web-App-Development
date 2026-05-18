@@ -15,21 +15,21 @@ export default function PublicHeader() {
 
           <a
             className="text-on-surface-variant hover:text-primary transition-colors duration-200"
-            href="#"
+            href="/contractors"
           >
             Contractors
           </a>
 
           <a
             className="text-on-surface-variant hover:text-primary transition-colors duration-200"
-            href="#"
+            href="/contact"
           >
             Soporte
           </a>
         </div>
 
         <div className="flex items-center gap-4">
-          <Link href="/register" className="text-on-surface-variant hover:text-primary transition-colors duration-200">
+          <Link href="/auth/register" className="text-on-surface-variant hover:text-primary transition-colors duration-200">
             <FiUsers />
           </Link>
           <Link href="/auth/login" className="text-on-surface-variant hover:text-primary transition-colors duration-200">

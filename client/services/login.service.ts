@@ -7,11 +7,22 @@ type LoginPayload = {
   password: string;
 };
 
+export type LoginResponse = {
+  accessToken: string;
+  user: {
+    id: string;
+    email: string;
+    role: string;
+    firstname: string;
+    lastname: string;
+  };
+};
+
 export async function login(
   data: LoginPayload
 ) {
 
-  return apiFetch<null>(
+  return apiFetch<LoginResponse>(
     "/login",
     {
       method: "POST",

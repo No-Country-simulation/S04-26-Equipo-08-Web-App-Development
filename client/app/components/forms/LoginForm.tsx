@@ -4,12 +4,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLogin } from "@/hooks/queries/useLogin";
 import { useAppToast } from "@/app/providers/ToastProvider";
+import { useRouter } from "next/navigation";
 
+
+import { useAuthStore } from "@/app/store/use-auth-store";
 
 export default function LoginForm() {
+  const router = useRouter();
   const loginMutation = useLogin();
-  const { showToast } =
-    useAppToast();
+  const { showToast } = useAppToast();
+  const { login } = useAuthStore();
   const {
     register,
     handleSubmit,
@@ -36,11 +40,24 @@ export default function LoginForm() {
     await loginMutation
       .mutateAsync(data);
 
+  login(response.accessToken, {
+    id: response.user.id,
+    name: `${response.user.firstname} ${response.user.lastname}`,
+    email: response.user.email,
+    role: response.user.role,
+  });
+
   showToast(
     "Login successful",
     undefined,
     "success"
   );
+
+  if (response.user.role === 'admin') {
+    router.push('/admin');
+  } else {
+    router.push('/');
+  }
 
 } catch (error) {
 

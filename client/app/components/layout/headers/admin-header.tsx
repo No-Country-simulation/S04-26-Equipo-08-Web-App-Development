@@ -1,39 +1,39 @@
 import Link from "next/link";
 import LogoutButton from "../../buttons/logoutbutton";
 
-export default function DashboardHeader() {
+export default function AdminHeader() {
   return (
     <header className="w-full top-0 z-50 bg-background neo-raised">
       <nav className="flex justify-between items-center px-8 h-16 w-full max-w-7xl mx-auto">
         <div className="text-xl font-semibold text-primary">
-          <Link href="/dashboard">NorthPay</Link>
+          <Link href="/admin">NorthPay Admin</Link>
         </div>
 
         <div className="hidden md:flex items-center gap-8 font-medium">
           <Link
             className="text-primary font-semibold border-b-2 border-primary transition-colors duration-200"
-            href="/dashboard"
+            href="/admin"
           >
             Dashboard
           </Link>
 
           <Link
             className="text-on-surface-variant hover:text-primary transition-colors duration-200"
-            href="/contractors"
+            href="/admin/users"
           >
-            Contractors
+            Users
           </Link>
 
           <Link
             className="text-on-surface-variant hover:text-primary transition-colors duration-200"
-            href="/contact"
+            href="/admin/roles"
           >
-            Reports
+            Roles
           </Link>
 
           <Link
             className="text-on-surface-variant hover:text-primary transition-colors duration-200"
-            href="/settings"
+            href="/admin/settings"
           >
             Settings
           </Link>
