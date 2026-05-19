@@ -16,27 +16,6 @@ export default function AdminHeader() {
           >
             Dashboard
           </Link>
-
-          <Link
-            className="text-on-surface-variant hover:text-primary transition-colors duration-200"
-            href="/admin/users"
-          >
-            Users
-          </Link>
-
-          <Link
-            className="text-on-surface-variant hover:text-primary transition-colors duration-200"
-            href="/admin/roles"
-          >
-            Roles
-          </Link>
-
-          <Link
-            className="text-on-surface-variant hover:text-primary transition-colors duration-200"
-            href="/admin/settings"
-          >
-            Settings
-          </Link>
         </div>
 
         <div className="flex items-center gap-4">

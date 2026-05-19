@@ -1,5 +1,4 @@
 import React from 'react'
-import Header from '../components/layout/headers/header'
 
 export default function AdminLayout({
   children,
@@ -8,7 +7,6 @@ export default function AdminLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header />
       <main className="flex-1">
         {children}
       </main>
