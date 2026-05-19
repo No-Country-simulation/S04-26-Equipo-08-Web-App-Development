@@ -10,6 +10,7 @@ import {
   HelpCircle,
   LayoutDashboard,
   LogOut,
+  MailCheckIcon,
   Users,
 } from "lucide-react";
 
@@ -100,6 +101,12 @@ export default function AdminSidebar() {
             icon={LayoutDashboard}
             label={collapsed ? "" : "Resumen"}
             href="/admin"
+          />
+
+          <SidebarItem
+            icon={MailCheckIcon}
+            label={collapsed ? "" : "Agregar"}
+            href="/admin/add-contractor"
           />
 
           <SidebarItem

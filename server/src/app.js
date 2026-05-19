@@ -44,7 +44,7 @@ app.use(morgan("dev"));
 app.use("/api/v1", routes);
 
 //sendTheWhats();
-//app.use("/api", testRoutes);
+app.use("/api/v1", testRoutes);
 
 //Rutas 
 

@@ -1,11 +1,15 @@
 import { Bell } from "lucide-react";
 import Image from "next/image";
 
-export default function AdminHeader() {
+interface AdminHeaderProps {
+  title?: string;
+}
+
+export default function AdminHeader({ title = "Dashboard" }: AdminHeaderProps) {
   return (
     <header className="flex h-20 items-center justify-between bg-[#e8eaf0] px-8 shadow-xl">
       <h1 className="text-2xl font-bold">
-        Dashboard
+        {title}
       </h1>
 
       <div className="flex items-center gap-4">
