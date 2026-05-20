@@ -11,13 +11,13 @@ export default function LogoutButton() {
   const handleLogout = () => {
     logout()
 
-    router.push('/login')
+    router.push('/auth/login')
   }
 
   return (
     <button
       onClick={handleLogout}
-      className="bg-red-500 text-white px-4 py-2 rounded"
+      className="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded"
     >
       Cerrar sesión
     </button>

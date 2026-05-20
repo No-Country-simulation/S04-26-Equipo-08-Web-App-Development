@@ -8,7 +8,7 @@ export const loginSchema = z.object({
   password: z
     .string()
     .min(
-      6,
+      2,
       "La contraseña debe tener al menos 6 caracteres"
     ),
 });
