@@ -7,6 +7,7 @@ export const magicHandler = async (req, res) => {
       req.body.method,
       req.body.receiver,
       req.body.operatorId,
+      req.body.adminId
     );
 
     return answer != string

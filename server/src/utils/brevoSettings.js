@@ -1,26 +1,27 @@
 import dotenv from "dotenv";
 import brevo from "@getbrevo/brevo";
 dotenv.config();
-export async function brevoSend(userData) {
+export async function brevoSend(userData, messageInfo) {
   try {
     const apiInstance = new brevo.TransactionalEmailsApi();
 
     apiInstance.setApiKey(
       brevo.TransactionalEmailsAPiKeys.apiKey,
-      process.env.BREVO_KEY,
+      process.env.BREVO_API_KEY,
     );
 
     const sendSmtpEmail = new brevo.sendSmtpEmail();
-    const f =  "fewfewfewf";
-    sendSmtpEmail.subject = "Access Link";
-    sendSmtpEmail.to = [{ email: userData.userEmail, name: userData.name  }];
-    sendSmtpEmail.htmlContent =
-      `<html><body><h1> Hello, ${userData.name} This is an Email from NorthPay HR </h1><p>Here we'll display the link to activate your Contractor account</p><a href=${f}> Click Here </a></body></html>`
+    sendSmtpEmail.subject = messageInfo.subject;
+    sendSmtpEmail.to = [
+      { email: userData.email, name: userData.username },
+    ];
+    sendSmtpEmail.htmlContent = `${messageInfo.message}`;
     sendSmtpEmail.sender = {
       name: "Northpay",
-      email: process.env.BREVO_FROM_EMAIL,
+      email: process.env.BREVO_SENDER_EMAIL,
     };
     const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(result);
     return result;
   } catch (error) {
     console.error(error);
