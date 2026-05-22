@@ -1,23 +1,23 @@
-import { generateToken } from "../../utils/jwt";
-import { brevoSend } from "../../utils/brevoSettings";
-import db from "../../config/database.js";
+import { generateToken } from "../../utils/jwt.js";
+import { db } from "../../config/database.js";
 import { whatsappMessage } from "../../utils/whatsappTwilio.js";
 import { notifySender } from "../../utils/notifySender.js";
+import { sendEmail } from "../../utils/nodemailer.js";
 
 export const magicLink = async (method, receiver, operatorId, adminId) => {
   try {
     if (!adminId) return "We need Admin Authorization to continue.";
-    const adminExists = await db.query(
-      "SELECT email FROM users WHERE id = $1",
-      [adminId],
-    );
+    const adminExists = await db.query("SELECT * FROM users WHERE id = $1", [
+      adminId,
+    ]);
+
     if (adminExists.rows.length < 1)
       return "That id doesn't match any of the DB";
     else if (adminExists.rows[0].role != "admin")
       return "Only the Admin can authorize this operation.";
     const { email, number, username } = receiver;
     if (!username) return "Name of User Required...";
-    if (method != "whatsapp" || method != "email")
+    if (method != "whatsapp" && method != "email")
       return "Wrong Method Argument.";
     const operator = await db.query("SELECT * FROM users WHERE id = $1", [
       operatorId,
@@ -33,19 +33,32 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
         return "Email (of type String) Needed.";
 
       //Because of the DB, we must pre-register the User to mark the progress.
+      const userExists = await db.query(
+        "SELECT email FROM users WHERE email = $1",
+        [email],
+      );
+
+      if (userExists.rowCount == 1)
+        return "There's a User registered with that email, please try another.";
+
       const register = await db.query(
-        "INSERT INTO users(email, firstname, role) VALUES ($1, $2, $3)",
+        "INSERT INTO users(email, firstname, role) VALUES ($1, $2, $3) RETURNING *",
         [email, username, "contractor"],
       );
-      if (register.rows.length == 1) {
+
+      if (register.rowCount == 1) {
         const session = await generateToken(receiver, "5h");
         const contractorMessage = `<html><body> ¡Hola, ${receiver.username}!, He aquí tu link de acceso para comenzar con la activación de tu perfil como Contractor en Northpay! <br> <a href=${process.env.MAGIC_URL + "/" + session}> Link Here!</a> </body></html>`;
-        const sending = await brevoSend({ session, receiver });
 
-        if (sending) {
+        const sending = await sendEmail(
+          { email: receiver.email },
+          { subject: "NorthPay Email", message: contractorMessage },
+        );
+        
+        if (sending?.rejected.length == 0) {
           //Let's Update the Flow
           const registerContractor = await db.query(
-            "INSERT INTO contractor_profiles (user_id, onboarding_status) VALUES($1, $2)",
+            "INSERT INTO contractor_profiles (user_id, onboarding_status) VALUES($1, $2) RETURNING *",
             [register.rows[0].id, "INVITED"],
           );
 
@@ -62,11 +75,13 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
           const notifying = await notifySender(userData, contentInfo, "email");
 
           //onboarding_events right here i guess
-
-          return {
-            message: "Link Successfully Sent! Updating Platform System!",
-          };
-        } else return "The Email Failed, try again later please...";
+          if (notifying?.message)
+            return {
+              message: notifying.message,
+            };
+          else
+            return `Something happened notifying the Operator, let's see: ${notifying}`;
+        } else return `The email failed, let's see the reason: ${sending}`;
       } else
         return "Something failed making pre-register... Try again later please!";
     } else if (method == "whatsapp") {
@@ -78,13 +93,22 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
         number,
         `¡Hola! ¡He aquí el link para poder activar tu cuenta como Contractor en NorthPay! Link: https://someLink/${token}`,
       );
+      console.log(sendingMessage)
       if (sendingMessage?.errorMessage == null) {
+        const userExists = await db.query(
+          "SELECT phone FROM users WHERE phone = $1",
+          [number],
+        );
+
+        if (userExists.rowCount == 1)
+          return "There's a User registered with that phoneNumber, please try another.";
+
         const theUser = await db.query(
-          "INSERT INTO users(phone, firstname, role) VALUES ($1, $2, $3)",
-          [number, username, "contractor"],
+          "INSERT INTO users(phone, firstname, role, email) VALUES ($1, $2, $3, $4) RETURNING *",
+          [number, username, "contractor", email ? email: "something@practice.com"],
         );
         const registerContractor = await db.query(
-          "INSERT INTO contractor_profiles (user_id, onboarding_status) VALUES($1, $2)",
+          "INSERT INTO contractor_profiles (user_id, onboarding_status) VALUES($1, $2) RETURNING *",
           [theUser.rows[0].id, "INVITED"],
         );
 
@@ -101,8 +125,9 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
           contentInfo,
           "whatsapp",
         );
-
-        return { message: "¡Mensaje de Whatsapp Enviado!" };
+        if (notifyStaff?.message) return { message: notifyStaff.message };
+        else
+          return `Something went wrong notifying the Operator: ${notifyStaff}`;
       } else return "Error sending the message.";
     }
   } catch (error) {

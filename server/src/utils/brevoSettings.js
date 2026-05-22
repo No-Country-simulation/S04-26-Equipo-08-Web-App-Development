@@ -1,28 +1,32 @@
 import dotenv from "dotenv";
-import brevo from "@getbrevo/brevo";
+import { BrevoClient } from "@getbrevo/brevo";
+import axios from "axios";
 dotenv.config();
 export async function brevoSend(userData, messageInfo) {
   try {
-    const apiInstance = new brevo.TransactionalEmailsApi();
+    const brevo = new BrevoClient({apiKey: process.env.BREVO_API_KEY, timeoutInSeconds: 30, maxRetries:2});
 
-    apiInstance.setApiKey(
-      brevo.TransactionalEmailsAPiKeys.apiKey,
-      process.env.BREVO_API_KEY,
-    );
+    const result = await brevo.transactionalEmails.sendTransacEmail({
+      sender: {
+        name: process.env.BREVO_SENDER_NAME,
+        email: process.env.BREVO_SENDER_EMAIL,
+      },
+      to: [{ email: userData.email }],
+      subject: messageInfo.subject,
+      htmlContent: `${messageInfo.message}`,
+      replyTo: {
+        email: process.env.BREVO_SENDER_EMAIL,
+        name: process.env.BREVO_SENDER_NAME,
+      },
+    });
 
-    const sendSmtpEmail = new brevo.sendSmtpEmail();
-    sendSmtpEmail.subject = messageInfo.subject;
-    sendSmtpEmail.to = [
-      { email: userData.email, name: userData.username },
-    ];
-    sendSmtpEmail.htmlContent = `${messageInfo.message}`;
-    sendSmtpEmail.sender = {
-      name: "Northpay",
-      email: process.env.BREVO_SENDER_EMAIL,
-    };
-    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log(result);
+    console.log('Brevo result:', result);
     return result;
+    //res.json({
+    //  success: true,
+    //  messageId: result.messageId,
+    //  result,
+    //});
   } catch (error) {
     console.error(error);
   }

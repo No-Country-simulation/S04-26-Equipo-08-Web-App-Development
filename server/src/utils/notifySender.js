@@ -1,27 +1,27 @@
-import { whatsappMessage } from "./whatsappTwilio";
-import { db } from "../config/database";
-import { brevoSend } from "./brevoSettings";
+import { whatsappMessage } from "./whatsappTwilio.js";
+import { db } from "../config/database.js";
+import { sendEmail } from "./nodemailer.js";
 export const notifySender = async (userData, contentInfo, type) => {
   try {
     const { userId, email, phone, username } = userData;
     if (!userId) return "User Identification is needed to notify on DB.";
+    console.log("Inicio del NotifySender");
     if (type == "email") {
       if (!email) return "Email Needed.";
-      const notifyEmail = await brevoSend(
-        { email, username },
+      const notifyEmail = await sendEmail(
+        { email },
         { subject: contentInfo.subject, message: contentInfo.emailMessage },
       );
+      console.log(`Aquí es después del Notify Email`);
       if (notifyEmail != undefined) {
         const notifyDB = await db.query(
-          "INSERT INTO notifications (user_id, title, message, type,) VALUES ($1, $2, $3, $4)",
+          "INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, $4)",
           [userId, contentInfo.title, contentInfo.emailMessage, type],
         );
+        if (notifyDB.rowCount > 0) return { message: "Notified Successfully!" };
+        else
+          return "Something mismatched between the DB and the email request, try again later.";
       } else return "Error Sending the Email, try again later...";
-
-      if (notifyDB.rowCount.length > 0)
-        return { message: "Notified Successfully!" };
-      else
-        return "Something mismatched between the DB and the email request, try again later.";
     } else if (type == "whatsapp") {
       if (!phone) return "Phone Number Needed";
       const regex = process.env.WHATSAPP_REGEX;
@@ -35,7 +35,7 @@ export const notifySender = async (userData, contentInfo, type) => {
       if (whatsNotification.errorMessage != null)
         return `Something happened sending the Whatsapp message: ${whatsNotification.errorMessage}`;
       const notifyDB = await db.query(
-        "INSERT INTO notifications (user_id, title, message, type,) VALUES ($1, $2, $3, $4)",
+        "INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, $4)",
         [userId, contentInfo.title, contentInfo.whatsappMessage, type],
       );
       if (notifyDB.rowCount == 1)
@@ -49,8 +49,8 @@ export const notifySender = async (userData, contentInfo, type) => {
       const theRegex = new RegExp(regex);
       if (!theRegex.test(phone))
         return "Invalid Phone Format. Whatsapp Format Needed.";
-      const notifyEmail = await brevoSend(
-        { email, username },
+      const notifyEmail = await sendEmail(
+        { email },
         { subject: contentInfo.subject, message: contentInfo.emailMessage },
       );
 
@@ -76,6 +76,7 @@ export const notifySender = async (userData, contentInfo, type) => {
         return "Something went wrong trying to send both notifications, try again later...";
     }
   } catch (error) {
+    console.log(error);
     return { error: error?.message };
   }
 };

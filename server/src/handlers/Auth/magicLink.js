@@ -1,8 +1,9 @@
-import { magicLink } from "../../controllers/Auth/magicLink";
-import { errorResponse, successResponse } from "../../utils/response";
+import { magicLink } from "../../controllers/Auth/magicLink.js";
+import { errorResponse, successResponse } from "../../utils/response.js";
 
 export const magicHandler = async (req, res) => {
   try {
+    
     const answer = await magicLink(
       req.body.method,
       req.body.receiver,
@@ -10,8 +11,8 @@ export const magicHandler = async (req, res) => {
       req.body.adminId
     );
 
-    return answer != string
-      ? successResponse(res, answer, "Success on Magic Link!", 204)
+    return answer.message
+      ? successResponse(res, answer, "Success on Magic Link!", 200)
       : errorResponse(
           res,
           "Something went wrong with the link...",

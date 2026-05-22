@@ -1,6 +1,6 @@
 ### NorthPay Backend - Authentication API
 
-@baseUrl = http://localhost:3001/api/v1
+@baseUrl = http://localhost:3000/api/v1
 
 ### Endpoint Seed Admin
 # Este endpoint se utiliza para crear un usuario admin por defecto en la base de datos. Solo
@@ -14,8 +14,8 @@ POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "email": "admin@admin",
-    "password": "Admin"
+    "email": "something@gmail.com",
+    "password": "superSecurepassword132"
 }
 ### Register User
 # Registra al usuario independientemente de su rol (validación básica)
@@ -23,10 +23,26 @@ POST {{baseUrl}}/register
 Content-Type: application/json
 
 {
-    "email": "something3@gmail.com",
-    "password": "superSecurepassword132",
-    "role": "contractor",
-    "firstname": "Mr",
-    "lastname": "Glass",
-    "phone": "+594353582975372"
+    "email": "operator1@gmail.com",
+    "password": "superPassssszzz",
+    "role": "operator",
+    "firstname": "Jhon",
+    "lastname": "Clavel",
+    "phone": "+584353582975372"
+}
+
+### Send Magic Link
+# Creación y envío de Link de acceso para nuevos Usuarios Contratistas
+POST {{baseUrl}}/magicLink
+Content-Type: application/json
+
+{
+    "method": "whatsapp",
+    "receiver": {
+        "number": "+584169099322",
+        "username": "Eustanasio",
+        "email": "something2@gmail.com"
+    },
+    "operatorId": "5a3b087b-dafa-4fe3-8ebc-b51470286e43",
+    "adminId": "aa4633d2-38cb-4dd2-a279-409bebf0c47a"
 }
