@@ -15,12 +15,12 @@ router.get("/health", async (req, res) => {
 
 router.get("/admin-check", async (req, res) => {
   try {
-    const result = await db.query("SELECT id, email, role, firstname FROM users WHERE email = $1", ["admin@admin"]);
+    const result = await db.query("SELECT id, email, role, firstname FROM users WHERE email = $1", ["admin@admin.com"]);
 
     if (result.rows.length > 0) {
-      return successResponse(res, result.rows[0], "Admin user found");
+      return successResponse(res, true, "Admin user found");
     } else {
-      return errorResponse(res, "Admin user not found", 404);
+      return successResponse(res, false, "Admin user not found");
     }
   } catch (error) {
     return errorResponse(res, "Error checking admin user", 500, error.message);
