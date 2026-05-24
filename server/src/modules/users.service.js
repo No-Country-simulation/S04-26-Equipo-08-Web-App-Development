@@ -124,4 +124,27 @@ export const updateUser = async (id, userData) => {
   return result.rows[0];
 };
 
-export const softDeleteUser = async (id) => {};
+export const softDeleteUser = async (id) => {
+  const result = await db.query(
+    `
+    UPDATE users
+    SET
+      is_active = false,
+      updated_at = NOW()
+    WHERE id = $1
+    RETURNING
+      id,
+      email,
+      role,
+      firstname,
+      lastname,
+      phone,
+      is_active,
+      created_at,
+      updated_at
+    `,
+    [id],
+  );
+
+  return result.rows[0];
+};

@@ -3,6 +3,7 @@ import {
   getUsers,
   getUserById,
   updateUser,
+  softDeleteUser,
 } from "../modules/users.service.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 
@@ -38,6 +39,15 @@ export const updateUserController = async (req, res) => {
     const updatedUser = await updateUser(req.params.id, req.body);
 
     return successResponse(res, updatedUser, "User updated successfully");
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+export const softDeleteUserController = async (req, res) => {
+  try {
+    const deletedUser = await softDeleteUser(req.params.id);
+
+    return successResponse(res, deletedUser, "User deactivated successfully");
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }

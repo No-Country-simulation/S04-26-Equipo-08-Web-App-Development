@@ -53,3 +53,7 @@ Content-Type: application/json
   "firstname": "Tester",
   "phone": "1199998888"
 }
+
+### Soft Delete User
+DELETE {{baseUrl}}/users/00491eb0-9cd7-4d72-bea2-a91b4667ced5
+Accept: application/json
