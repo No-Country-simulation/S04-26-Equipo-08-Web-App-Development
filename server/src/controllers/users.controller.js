@@ -1,4 +1,4 @@
-import { getUsers, getUserById } from "../modules/users.service.js";
+import { createUser, getUsers, getUserById } from "../modules/users.service.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 
 export const getUsersController = async (req, res) => {
@@ -17,5 +17,14 @@ export const getUserByIdController = async (req, res) => {
     return successResponse(res, user, "User retrieved successfully");
   } catch (error) {
     return errorResponse(res, "Error retrieving user", 500, error.message);
+  }
+};
+export const createUserController = async (req, res) => {
+  try {
+    const newUser = await createUser(req.body);
+
+    return successResponse(res, newUser, "User created successfully", 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
   }
 };
