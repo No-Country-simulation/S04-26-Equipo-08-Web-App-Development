@@ -92,6 +92,36 @@ export const getUserById = async (id) => {
   return result.rows[0];
 };
 
-export const updateUser = async (id, userData) => {};
+export const updateUser = async (id, userData) => {
+  const { email, role, firstname, lastname, phone, is_active } = userData;
+
+  const result = await db.query(
+    `
+    UPDATE users
+    SET
+      email = COALESCE($1, email),
+      role = COALESCE($2, role),
+      firstname = COALESCE($3, firstname),
+      lastname = COALESCE($4, lastname),
+      phone = COALESCE($5, phone),
+      is_active = COALESCE($6, is_active),
+      updated_at = NOW()
+    WHERE id = $7
+    RETURNING
+      id,
+      email,
+      role,
+      firstname,
+      lastname,
+      phone,
+      is_active,
+      created_at,
+      updated_at
+    `,
+    [email, role, firstname, lastname, phone, is_active, id],
+  );
+
+  return result.rows[0];
+};
 
 export const softDeleteUser = async (id) => {};

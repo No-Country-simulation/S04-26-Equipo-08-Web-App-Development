@@ -1,4 +1,9 @@
-import { createUser, getUsers, getUserById } from "../modules/users.service.js";
+import {
+  createUser,
+  getUsers,
+  getUserById,
+  updateUser,
+} from "../modules/users.service.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 
 export const getUsersController = async (req, res) => {
@@ -24,6 +29,15 @@ export const createUserController = async (req, res) => {
     const newUser = await createUser(req.body);
 
     return successResponse(res, newUser, "User created successfully", 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+export const updateUserController = async (req, res) => {
+  try {
+    const updatedUser = await updateUser(req.params.id, req.body);
+
+    return successResponse(res, updatedUser, "User updated successfully");
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
