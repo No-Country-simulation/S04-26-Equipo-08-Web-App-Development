@@ -54,7 +54,7 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
           { email: receiver.email },
           { subject: "NorthPay Email", message: contractorMessage },
         );
-        
+
         if (sending?.rejected.length == 0) {
           //Let's Update the Flow
           const registerContractor = await db.query(
@@ -88,44 +88,60 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
       //Whatsapp Logic Here... Evaluating Twillio over Meta API
       if (!number)
         return "If you're going to send something via Whatsapp, send the receiver number next time!";
-      const token = await generateToken(receiver, "5h");
-      const sendingMessage = await whatsappMessage(
-        number,
-        `¡Hola! ¡He aquí el link para poder activar tu cuenta como Contractor en NorthPay! Link: https://someLink/${token}`,
+      const userExists = await db.query(
+        "SELECT phone FROM users WHERE phone = $1",
+        [number],
       );
-      console.log(sendingMessage)
-      if (sendingMessage?.errorMessage == null) {
-        const userExists = await db.query(
-          "SELECT phone FROM users WHERE phone = $1",
-          [number],
-        );
 
-        if (userExists.rowCount == 1)
-          return "There's a User registered with that phoneNumber, please try another.";
+      if (userExists.rowCount == 1) await db.query("DELETE FROM users WHERE phone = $1", [number]);
+        //return "There's a User registered with that phoneNumber, please try another.";
 
-        const theUser = await db.query(
-          "INSERT INTO users(phone, firstname, role, email) VALUES ($1, $2, $3, $4) RETURNING *",
-          [number, username, "contractor", email ? email: "something@practice.com"],
-        );
-        const registerContractor = await db.query(
-          "INSERT INTO contractor_profiles (user_id, onboarding_status) VALUES($1, $2) RETURNING *",
-          [theUser.rows[0].id, "INVITED"],
-        );
+      const theUser = await db.query(
+        "INSERT INTO users(phone, firstname, role, email) VALUES ($1, $2, $3, $4) RETURNING *",
+        [
+          number,
+          username,
+          "contractor",
+          email ? email : "something@practice.com",
+        ],
+      );
+      console.log("After theUser");
+      if (theUser.rowCount < 1) return "Issues creating user";
+      const registerContractor = await db.query(
+        "INSERT INTO contractor_profiles (user_id, onboarding_status) VALUES($1, $2) RETURNING *",
+        [theUser.rows[0].id, "INVITED"],
+      );
+      console.log("After the registerContractor");
+      if (registerContractor.rowCount < 1)
+        return "Failed registering Contractor";
+      const onboardingSteps = await db.query(
+        "INSERT INTO onboarding_steps(contractor_profile_id, step_name, completed) VALUES ($1, $2, $3)",
+        [registerContractor.rows[0].id, "personal_info", false],
+      );
 
-        const onboardingSteps = await db.query(
-          "INSERT INTO onboarding_steps(contractor_profile_id, step_name, completed) VALUES ($1, $2, $3)",
-          [registerContractor.rows[0].id, "personal_info", false],
-        );
-        const contentInfo = {
+      if (onboardingSteps.rowCount > 0) {
+        const token = await generateToken({userId: theUser.rows[0].Id}, "5h");
+        const userContentInfo = {
+          title: "Invitacion a Nortphay",
+          whatsappMessage: `¡Hola! ¡He aquí el link para poder activar tu cuenta como Contractor en NorthPay! Link: https://someLink/${token}`,
+        };
+        
+        const operatorContentInfo = {
           title: "New Contractor invitation",
           whatsappMessage: `There's a new Contractor Invited via Magic Link into the platform! Id ${registerContractor.rows[0].id}`,
         };
-        const notifyStaff = await notifySender(
-          userData,
-          contentInfo,
+        const notifyUser = await notifySender(
+          { userId: theUser.rows[0].id, phone: number },
+          userContentInfo,
           "whatsapp",
         );
-        if (notifyStaff?.message) return { message: notifyStaff.message };
+        const notifyStaff = await notifySender(
+          userData,
+          operatorContentInfo,
+          "whatsapp",
+        );
+        console.log("After NotifyStaff");
+        if (notifyStaff?.message && notifyUser?.message) return { operatorMessage: notifyStaff.message , userMessage: notifyUser.message};
         else
           return `Something went wrong notifying the Operator: ${notifyStaff}`;
       } else return "Error sending the message.";

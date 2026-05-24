@@ -39,9 +39,9 @@ Content-Type: application/json
 {
     "method": "whatsapp",
     "receiver": {
-        "number": "+584169099322",
+        "number": "+584264000136",
         "username": "Eustanasio",
-        "email": "something2@gmail.com"
+        "email": "something3@gmail.com"
     },
     "operatorId": "5a3b087b-dafa-4fe3-8ebc-b51470286e43",
     "adminId": "aa4633d2-38cb-4dd2-a279-409bebf0c47a"
