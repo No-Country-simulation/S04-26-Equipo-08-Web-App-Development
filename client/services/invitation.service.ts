@@ -1,5 +1,4 @@
 import { apiFetch } from "./api";
-//import { InvitationData } from "@/types/invitation.types";
 
 export interface InvitationData {
   email: string;
@@ -13,4 +12,15 @@ export async function validateInvitation(
   return apiFetch<InvitationData>(
     `/invitations/${token}`
   );
+}
+
+export async function sendInvitation(data: {
+  contact: string;
+  method: "email" | "whatsapp";
+}) {
+  return apiFetch<{ message: string }>("/invitations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 }

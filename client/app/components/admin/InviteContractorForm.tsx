@@ -2,24 +2,30 @@
 
 import { useState } from "react";
 import { Mail, Phone, Send } from "lucide-react";
+import { sendInvitation } from "@/services/invitation.service";
 
 export default function InviteContractorForm() {
   const [method, setMethod] = useState<"email" | "whatsapp">("email");
   const [contactInfo, setContactInfo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setSuccessMessage("");
+    setErrorMessage("");
 
-    // Simular el tiempo de respuesta del backend por ahora
-    setTimeout(() => {
+    try {
+      await sendInvitation({ contact: contactInfo, method });
       setIsLoading(false);
       setSuccessMessage("¡Invitación enviada exitosamente!");
       setContactInfo("");
-    }, 1500);
+    } catch {
+      setIsLoading(false);
+      setErrorMessage("Error al enviar la invitación. Intenta de nuevo.");
+    }
   };
 
   return (
@@ -109,6 +115,12 @@ export default function InviteContractorForm() {
           {successMessage && (
             <div className="neo-inset mt-4 rounded-xl border-l-4 border-emerald-500 bg-emerald-500/10 p-4 text-emerald-700">
               {successMessage}
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="neo-inset mt-4 rounded-xl border-l-4 border-red-500 bg-red-500/10 p-4 text-red-700">
+              {errorMessage}
             </div>
           )}
         </form>
