@@ -1,7 +1,5 @@
-import React from 'react'
+import OnboardingStatus from "@/app/components/onboarding/onboarding-status";
 
-export default function page() {
-  return (
-    <div>page</div>
-  )
+export default function ContractorsPage() {
+  return <OnboardingStatus />;
 }

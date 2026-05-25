@@ -25,7 +25,7 @@ export default function InvitationCard({
     const params = new URLSearchParams();
     if (email) params.set("email", email);
     if (token) params.set("token", token);
-    router.push(`/auth/register?${params.toString()}`);
+    router.push(`/contractors/step1?${params.toString()}`);
   };
 
   if (isLoading) {
