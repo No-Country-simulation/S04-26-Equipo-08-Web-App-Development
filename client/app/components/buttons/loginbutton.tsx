@@ -11,6 +11,7 @@ export default function LoginButton() {
       id: '1',
       name: 'Orlando',
       email: 'test@test.com',
+      role: 'user',
     })
   }
 
