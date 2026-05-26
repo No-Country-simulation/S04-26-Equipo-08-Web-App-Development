@@ -16,7 +16,8 @@ export const generateToken = (data, expireTime) => {
 
 export function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split("")[1];
+  // Extrae correctamente el token JWT del header Authorization
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (token == null) return res.sendStatus(401);
 
