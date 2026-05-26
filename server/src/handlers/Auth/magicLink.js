@@ -5,10 +5,9 @@ export const magicHandler = async (req, res) => {
   try {
     
     const answer = await magicLink(
-      req.body.method,
       req.body.receiver,
       req.body.operatorId,
-      req.body.adminId
+      req.user.id
     );
 
     return typeof answer != "string"

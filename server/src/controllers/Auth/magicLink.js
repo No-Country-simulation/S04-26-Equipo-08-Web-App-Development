@@ -5,34 +5,31 @@ import { notifySender } from "../../utils/notifySender.js";
 import { sendEmail } from "../../utils/nodemailer.js";
 import bcrypt from "bcrypt";
 
-export const magicLink = async (method, receiver, operatorId, adminId) => {
+export const magicLink = async (receiver, operatorId, adminId) => {
   try {
     if (!adminId) return "We need Admin Authorization to continue.";
     const adminExists = await db.query("SELECT * FROM users WHERE id = $1", [
       adminId,
     ]);
 
-    if (adminExists.rows.length < 1)
-      return "That id doesn't match any of the DB";
+    if (adminExists.rows.length < 1) return "User (Admin) not Found.";
     else if (adminExists.rows[0].role != "admin")
       return "Only the Admin can authorize this operation.";
-    const { email, number, username } = receiver;
+    const { email, number } = receiver;
     if (!username) return "Name of User Required...";
-    if (method != "whatsapp" && method != "email")
-      return "Wrong Method Argument.";
+
     const operator = await db.query("SELECT * FROM users WHERE id = $1", [
       operatorId,
     ]);
-    const userData = {
+    const operatorData = {
       userId: operatorId,
       email: operator.rows[0].email,
       phone: operator.rows[0].phone,
       username: operator.rows[0].firstname,
     };
-    if (method == "email") {
-      if (!email || typeof email != "string")
-        return "Email (of type String) Needed.";
+    const temporalPass = await bcrypt.hash("northPass201", 12);
 
+    if (email != undefined || email != null) {
       //Because of the DB, we must pre-register the User to mark the progress.
       const userExists = await db.query(
         "SELECT email FROM users WHERE email = $1",
@@ -41,15 +38,15 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
 
       if (userExists.rowCount == 1)
         return "There's a User registered with that email, please try another.";
-      const temporalPass = await bcrypt.hash("northPass201", 12);
+
       const register = await db.query(
-        "INSERT INTO users(email, firstname, role, password) VALUES ($1, $2, $3, $4) RETURNING *",
-        [email, username, "contractor", temporalPass],
+        "INSERT INTO users(email, role, password) VALUES ($1, $2, $3) RETURNING *",
+        [email, "contractor", temporalPass],
       );
 
       if (register.rowCount == 1) {
         const session = await generateToken(receiver, "5h");
-        const contractorMessage = `<html><body> ¡Hola, ${receiver.username}!, He aquí tu link de acceso para comenzar con la activación de tu perfil como Contractor en Northpay! <br> <a href=${process.env.MAGIC_URL + "/" + session}> Link Here!</a><br> <p>Tu Username Temporal es ${username} y tu Contraseña Temporal es: ${temporalPass}</p> </body></html>`;
+        const contractorMessage = `<html><body> ¡Hola, ${receiver.username}!, He aquí tu link de acceso para comenzar con la activación de tu perfil como Contractor en Northpay! <br> <a href=${process.env.MAGIC_URL + "/" + session}> Link Here!</a><br> <p>Tu Username Temporal es ${username} y tu Contraseña Temporal es: northPass201</p> </body></html>`;
 
         const sending = await sendEmail(
           { email: receiver.email },
@@ -82,7 +79,11 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
             emailMessage: `There's a new Contractor Invited via Magic Link into the platform! Id ${registerContractor.rows[0].id}`,
           };
 
-          const notifying = await notifySender(userData, contentInfo, "email");
+          const notifying = await notifySender(
+            operatorData,
+            contentInfo,
+            "email",
+          );
 
           if (notifying?.message)
             return {
@@ -93,10 +94,7 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
         } else return `The email failed, let's see the reason: ${sending}`;
       } else
         return "Something failed making pre-register... Try again later please!";
-    } else if (method == "whatsapp") {
-      //Whatsapp Logic Here... Evaluating Twillio over Meta API
-      if (!number)
-        return "If you're going to send something via Whatsapp, send the receiver number next time!";
+    } else if (number!= undefined && number != null) {
       const userExists = await db.query(
         "SELECT phone FROM users WHERE phone = $1",
         [number],
@@ -107,16 +105,16 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
       //return "There's a User registered with that phoneNumber, please try another.";
 
       const theUser = await db.query(
-        "INSERT INTO users(phone, firstname, role, email) VALUES ($1, $2, $3, $4) RETURNING *",
+        "INSERT INTO users(phone, role, email, password) VALUES ($1, $2, $3, $4) RETURNING *",
         [
           number,
-          username,
           "contractor",
-          email ? email : "something@practice.com",
+          "newUser@practice.com",
+          temporalPass
         ],
       );
       console.log("After theUser");
-      if (theUser.rowCount < 1) return "Issues creating user";
+      if (theUser.rowCount < 1) return "Issues creating user, try again later...";
       const registerContractor = await db.query(
         "INSERT INTO contractor_profiles (user_id, onboarding_status) VALUES($1, $2) RETURNING *",
         [theUser.rows[0].id, "INVITED"],
@@ -129,7 +127,7 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
         [registerContractor.rows[0].id, "personal_info", false],
       );
       const onboarding_events = await db.query(
-        "INSERT INTO oboarding_events(contractor_profile_id, event_type, description, performed_by) VALUES ($1, $2, $3, $4) RETURNING *",
+        "INSERT INTO onboarding_events(contractor_profile_id, event_type, description, performed_by) VALUES ($1, $2, $3, $4) RETURNING *",
         [
           registerContractor.rows[0].id,
           "Invitación Nuevo Usuario",
@@ -141,7 +139,7 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
         const token = await generateToken({ userId: theUser.rows[0].Id }, "5h");
         const userContentInfo = {
           title: "Invitacion a Nortphay",
-          whatsappMessage: `¡Hola! ¡He aquí el link para poder activar tu cuenta como Contractor en NorthPay! Link: https://someLink/${token}`,
+          whatsappMessage: `¡Hola! ¡He aquí el link para poder activar tu cuenta como Contractor en NorthPay! Link: https://someLink/${token}. Tu Contraseña: northPass201`,
         };
 
         const operatorContentInfo = {
