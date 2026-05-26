@@ -14,8 +14,8 @@ POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "email": "something@gmail.com",
-    "password": "superSecurepassword132"
+    "email": "repollo@gmail.com",
+    "password": "superPassssszzz"
 }
 ### Register User
 # Registra al usuario independientemente de su rol (validación básica)
@@ -23,12 +23,12 @@ POST {{baseUrl}}/register
 Content-Type: application/json
 
 {
-    "email": "operator1@gmail.com",
+    "email": "repollo@gmail.com",
     "password": "superPassssszzz",
-    "role": "operator",
-    "firstname": "Jhon",
-    "lastname": "Clavel",
-    "phone": "+584353582975372"
+    "role": "contractor",
+    "firstname": "Northpay",
+    "lastname": "Practice Contractor",
+    "phone": "+5835246246523523"
 }
 
 ### Send Magic Link
@@ -37,12 +37,12 @@ POST {{baseUrl}}/magicLink
 Content-Type: application/json
 
 {
-    "method": "whatsapp",
+    "method": "email",
     "receiver": {
         "number": "+584264000136",
-        "username": "Eustanasio",
-        "email": "something3@gmail.com"
+        "username": "Dexter",
+        "email": "something35@gmail.com"
     },
-    "operatorId": "5a3b087b-dafa-4fe3-8ebc-b51470286e43",
+    "operatorId": "f0fc0f44-b48f-4f56-99dc-6b59e4897b0a",
     "adminId": "aa4633d2-38cb-4dd2-a279-409bebf0c47a"
 }

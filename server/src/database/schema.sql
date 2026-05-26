@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   message TEXT,
 
   type notification_type,
-
+ 
   read BOOLEAN DEFAULT FALSE,
 
   created_at TIMESTAMP DEFAULT NOW(),

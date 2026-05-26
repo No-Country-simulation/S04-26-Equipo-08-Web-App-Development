@@ -3,6 +3,7 @@ import { db } from "../../config/database.js";
 import { whatsappMessage } from "../../utils/whatsappTwilio.js";
 import { notifySender } from "../../utils/notifySender.js";
 import { sendEmail } from "../../utils/nodemailer.js";
+import bcrypt from "bcrypt";
 
 export const magicLink = async (method, receiver, operatorId, adminId) => {
   try {
@@ -40,15 +41,15 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
 
       if (userExists.rowCount == 1)
         return "There's a User registered with that email, please try another.";
-
+      const temporalPass = await bcrypt.hash("northPass201", 12);
       const register = await db.query(
-        "INSERT INTO users(email, firstname, role) VALUES ($1, $2, $3) RETURNING *",
-        [email, username, "contractor"],
+        "INSERT INTO users(email, firstname, role, password) VALUES ($1, $2, $3, $4) RETURNING *",
+        [email, username, "contractor", temporalPass],
       );
 
       if (register.rowCount == 1) {
         const session = await generateToken(receiver, "5h");
-        const contractorMessage = `<html><body> ¡Hola, ${receiver.username}!, He aquí tu link de acceso para comenzar con la activación de tu perfil como Contractor en Northpay! <br> <a href=${process.env.MAGIC_URL + "/" + session}> Link Here!</a> </body></html>`;
+        const contractorMessage = `<html><body> ¡Hola, ${receiver.username}!, He aquí tu link de acceso para comenzar con la activación de tu perfil como Contractor en Northpay! <br> <a href=${process.env.MAGIC_URL + "/" + session}> Link Here!</a><br> <p>Tu Username Temporal es ${username} y tu Contraseña Temporal es: ${temporalPass}</p> </body></html>`;
 
         const sending = await sendEmail(
           { email: receiver.email },
@@ -66,6 +67,15 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
             "INSERT INTO onboarding_steps(contractor_profile_id, step_name, completed) VALUES ($1, $2, $3)",
             [registerContractor.rows[0].id, "personal_info", false],
           );
+          const onboarding_events = await db.query(
+            "INSERT INTO onboarding_events(contractor_profile_id, event_type, description, performed_by) VALUES ($1, $2, $3, $4) RETURNING *",
+            [
+              registerContractor.rows[0].id,
+              "Invitación Nuevo Usuario",
+              `Se ha invitado al nuevo Contratista con id: ${register.rows[0].id}`,
+              operatorId,
+            ],
+          );
           const contentInfo = {
             title: "New Contractor Onboarding",
             subject: "Contractor Invited",
@@ -74,7 +84,6 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
 
           const notifying = await notifySender(userData, contentInfo, "email");
 
-          //onboarding_events right here i guess
           if (notifying?.message)
             return {
               message: notifying.message,
@@ -93,8 +102,9 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
         [number],
       );
 
-      if (userExists.rowCount == 1) await db.query("DELETE FROM users WHERE phone = $1", [number]);
-        //return "There's a User registered with that phoneNumber, please try another.";
+      if (userExists.rowCount == 1)
+        await db.query("DELETE FROM users WHERE phone = $1", [number]);
+      //return "There's a User registered with that phoneNumber, please try another.";
 
       const theUser = await db.query(
         "INSERT INTO users(phone, firstname, role, email) VALUES ($1, $2, $3, $4) RETURNING *",
@@ -118,14 +128,22 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
         "INSERT INTO onboarding_steps(contractor_profile_id, step_name, completed) VALUES ($1, $2, $3)",
         [registerContractor.rows[0].id, "personal_info", false],
       );
-
-      if (onboardingSteps.rowCount > 0) {
-        const token = await generateToken({userId: theUser.rows[0].Id}, "5h");
+      const onboarding_events = await db.query(
+        "INSERT INTO oboarding_events(contractor_profile_id, event_type, description, performed_by) VALUES ($1, $2, $3, $4) RETURNING *",
+        [
+          registerContractor.rows[0].id,
+          "Invitación Nuevo Usuario",
+          `Se ha invitado al nuevo Contratista con id: ${theUser.rows[0].id}`,
+          operatorId,
+        ],
+      );
+      if (onboardingSteps.rowCount > 0 && onboarding_events.rowCount > 0) {
+        const token = await generateToken({ userId: theUser.rows[0].Id }, "5h");
         const userContentInfo = {
           title: "Invitacion a Nortphay",
           whatsappMessage: `¡Hola! ¡He aquí el link para poder activar tu cuenta como Contractor en NorthPay! Link: https://someLink/${token}`,
         };
-        
+
         const operatorContentInfo = {
           title: "New Contractor invitation",
           whatsappMessage: `There's a new Contractor Invited via Magic Link into the platform! Id ${registerContractor.rows[0].id}`,
@@ -141,7 +159,11 @@ export const magicLink = async (method, receiver, operatorId, adminId) => {
           "whatsapp",
         );
         console.log("After NotifyStaff");
-        if (notifyStaff?.message && notifyUser?.message) return { operatorMessage: notifyStaff.message , userMessage: notifyUser.message};
+        if (notifyStaff?.message && notifyUser?.message)
+          return {
+            operatorMessage: notifyStaff.message,
+            userMessage: notifyUser.message,
+          };
         else
           return `Something went wrong notifying the Operator: ${notifyStaff}`;
       } else return "Error sending the message.";

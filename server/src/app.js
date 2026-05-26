@@ -10,6 +10,7 @@ import morgan from "morgan";
 import bodyParser from "body-parser";
 import adminRoutes from "./routes/seed/admin.js";
 import { authenticateToken } from "./utils/jwt.js";
+
 dotenv.config();
 
 const app = express();
@@ -19,14 +20,7 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Origin",
       "X-Requested-With",
@@ -48,9 +42,9 @@ app.use("/api/v1", routes);
 //sendTheWhats();
 //app.use("/api/v1", testRoutes);
 
-//Rutas 
+//Rutas
 
-app.use('/api/v1/seed', adminRoutes)
+app.use("/api/v1/seed", adminRoutes);
 
 app.use(errorMiddleware);
 

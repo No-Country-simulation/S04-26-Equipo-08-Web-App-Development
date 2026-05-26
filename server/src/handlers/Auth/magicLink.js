@@ -11,7 +11,7 @@ export const magicHandler = async (req, res) => {
       req.body.adminId
     );
 
-    return answer.operatorMessage
+    return typeof answer != "string"
       ? successResponse(res, answer, "Success on Magic Link!", 200)
       : errorResponse(
           res,
