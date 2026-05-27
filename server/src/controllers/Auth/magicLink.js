@@ -132,7 +132,7 @@ export const magicLink = async (receiver, operatorId, adminId) => {
         const token = await generateToken({ userId: theUser.rows[0].Id }, "5h");
         const userContentInfo = {
           title: "Invitacion a Nortphay",
-          whatsappMessage: `¡Hola! ¡He aquí el link para poder activar tu cuenta como Contractor en NorthPay! Link: https://someLink/${token}. Tu Contraseña: northPass201`,
+          whatsappMessage: `¡Hola! ¡He aquí el link para poder activar tu cuenta como Contractor en NorthPay! Link: ${process.env.MAGIC_URL}/${token}. Tu Contraseña Temporal: northPass201`,
         };
 
         const operatorContentInfo = {
