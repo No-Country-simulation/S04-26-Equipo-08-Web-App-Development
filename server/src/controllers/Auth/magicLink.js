@@ -35,7 +35,7 @@ export const magicLink = async (receiver, operatorId, adminId) => {
       );
 
       if (userExists.rowCount == 1)
-        await db.query("DELETE FROM users WHERE email=$1", [email]);
+        return "There is an User that has the same email.";
 
       const register = await db.query(
         "INSERT INTO users(email, role, password) VALUES ($1, $2, $3) RETURNING *",
@@ -99,21 +99,20 @@ export const magicLink = async (receiver, operatorId, adminId) => {
       );
 
       if (userExists.rowCount == 1)
-        await db.query("DELETE FROM users WHERE phone = $1", [number]);
-      //return "There's a User registered with that phoneNumber, please try another.";
+        return "There's a User registered with that phoneNumber, please try another.";
 
       const theUser = await db.query(
         "INSERT INTO users(phone, role, email, password) VALUES ($1, $2, $3, $4) RETURNING *",
         [number, "contractor", "newUser@practice.com", temporalPass],
       );
-      console.log("After theUser");
+
       if (theUser.rowCount < 1)
         return "Issues creating user, try again later...";
       const registerContractor = await db.query(
         "INSERT INTO contractor_profiles (user_id, onboarding_status) VALUES($1, $2) RETURNING *",
         [theUser.rows[0].id, "INVITED"],
       );
-      console.log("After the registerContractor");
+
       if (registerContractor.rowCount < 1)
         return "Failed registering Contractor";
       const onboardingSteps = await db.query(
@@ -150,7 +149,7 @@ export const magicLink = async (receiver, operatorId, adminId) => {
           operatorContentInfo,
           "whatsapp",
         );
-        console.log("After NotifyStaff");
+
         if (notifyStaff?.message && notifyUser?.message)
           return {
             operatorMessage: notifyStaff.message,
