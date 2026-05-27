@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { completePersonalInfoController } from "../controllers/onboarding.controller.js";
-import { authenticateToken } from "../utils/jwt.js";
+import { completePersonalInfoController } from "../../controllers/onboarding.controller.js";
+import { authenticateToken } from "../../utils/jwt.js";
 
 const onboardingRoutes = Router();
 
