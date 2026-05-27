@@ -10,6 +10,7 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import adminRoutes from "./routes/seed/admin.js";
+import { authenticateToken } from "./utils/jwt.js";
 
 dotenv.config();
 
@@ -32,15 +33,15 @@ app.use(
 );
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(cookieParser());
 app.use(morgan("dev"));
 
 app.use("/api/v1", routes);
 
 //sendTheWhats();
-app.use("/api/v1", testRoutes);
+//app.use("/api/v1", testRoutes);
 
 //Rutas
 app.use("/api/v1/seed", adminRoutes);

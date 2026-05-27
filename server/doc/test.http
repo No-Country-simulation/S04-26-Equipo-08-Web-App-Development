@@ -2,6 +2,43 @@
 
 @baseUrl = http://localhost:3000/api/v1
 
+### Login User
+# Aquí el User se "Loggea" hacia la plataforma
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "email": "something3@gmail.com",
+    "password": "superSecurepassword132"
+}
+### Register User
+# Registra al usuario independientemente de su rol (validación básica)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "email": "something3@gmail.com",
+    "password": "superSecurepassword132",
+    "role": "contractor",
+    "firstname": "Mr",
+    "lastname": "Glass",
+    "phone": "+594353582975372"
+}
+
+### Send Magic Link
+# Creación y envío de Link de acceso para nuevos Usuarios Contratistas
+POST {{baseUrl}}/magicLink
+Accept: application/json
+
+{
+    "method": "email",
+    "receiver": {
+        "email": "ssmanzanilla2@gmail.com",
+        "username": "Fernando"
+    },
+    "operatorId": "dwfwe3f2w3f3w",
+    "adminId": "fiwejfoiwejoij2e434"
+}
 ### Health Check & Database Connection
 # Verifica si el servidor está corriendo y si hay conexión con PostgreSQL
 GET {{baseUrl}}/health
