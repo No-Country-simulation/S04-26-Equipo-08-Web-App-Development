@@ -10,7 +10,7 @@ export const loginHandler = async (
 
     const result = await login(req.body);
 
-    res.cookie(
+    await res.cookie(
       "PLATFORM_ACCESS_TOKEN",
       result.accessToken,
       {
@@ -23,7 +23,7 @@ export const loginHandler = async (
           1000 * 60 * 60 * 8,
         path: "/",
       },
-    );
+    )
 
     return successResponse(
       res,

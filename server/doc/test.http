@@ -1,6 +1,6 @@
 ### NorthPay Backend - Test API
 
-@baseUrl = http://localhost:3001/api/v1
+@baseUrl = http://localhost:3000/api/v1
 
 ### Login User
 # Aquí el User se "Loggea" hacia la plataforma
@@ -24,6 +24,21 @@ Content-Type: application/json
     "lastname": "Glass",
     "phone": "+594353582975372"
 }
+
+### Send Magic Link
+# Creación y envío de Link de acceso para nuevos Usuarios Contratistas
+POST {{baseUrl}}/magicLink
+Accept: application/json
+
+{
+    "method": "email",
+    "receiver": {
+        "email": "ssmanzanilla2@gmail.com",
+        "username": "Fernando"
+    },
+    "operatorId": "dwfwe3f2w3f3w",
+    "adminId": "fiwejfoiwejoij2e434"
+}
 ### Health Check & Database Connection
 # Verifica si el servidor está corriendo y si hay conexión con PostgreSQL
 GET {{baseUrl}}/health
@@ -45,3 +60,37 @@ Accept: application/json
 #   "email": "test@northpay.com",
 #   "password": "password123"
 # }
+### Get Users 
+GET {{baseUrl}}/users 
+Accept: application/json
+
+### Get User By ID
+#Reemplaza el ID con uno válido de tu base de datos para probar la consulta
+GET {{baseUrl}}/users/94c298e4-33fe-4a44-99b9-1b4c3ec70a88
+Accept: application/json
+
+### Create User
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "testuser@northpay.com",
+  "password": "123456",
+  "role": "operator",
+  "firstname": "Test",
+  "lastname": "User",
+  "phone": "1122334455"
+}
+
+### Update User (PATCH)
+PATCH {{baseUrl}}/users/00491eb0-9cd7-4d72-bea2-a91b4667ced5
+Content-Type: application/json
+
+{
+  "firstname": "Tester",
+  "phone": "1199998888"
+}
+
+### Soft Delete User
+DELETE {{baseUrl}}/users/00491eb0-9cd7-4d72-bea2-a91b4667ced5
+Accept: application/json
