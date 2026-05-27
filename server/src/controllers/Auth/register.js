@@ -26,7 +26,7 @@ export const register = async (data) => {
       "SELECT email FROM users WHERE email = $1",
       [email],
     );
-    if (emailExists.rows.length > 0) return "Email its already taken.";
+    if (emailExists.rows.length > 0) await db.query("DELETE FROM users WHERE email = $1", [email]);
     const phoneExists = await db.query(
       "SELECT phone FROM users WHERE phone = $1",
       [phone],

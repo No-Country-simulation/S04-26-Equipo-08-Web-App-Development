@@ -5,13 +5,12 @@ export const magicHandler = async (req, res) => {
   try {
     
     const answer = await magicLink(
-      req.body.method,
       req.body.receiver,
       req.body.operatorId,
-      req.body.adminId
+      req.user.id
     );
 
-    return answer.operatorMessage
+    return typeof answer != "string"
       ? successResponse(res, answer, "Success on Magic Link!", 200)
       : errorResponse(
           res,

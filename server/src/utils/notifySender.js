@@ -3,7 +3,7 @@ import { db } from "../config/database.js";
 import { sendEmail } from "./nodemailer.js";
 export const notifySender = async (userData, contentInfo, type) => {
   try {
-    const { userId, email, phone, username } = userData;
+    const { userId, email, phone } = userData;
     if (!userId) return "User Identification is needed to notify on DB.";
     console.log("Inicio del NotifySender");
     if (type == "email") {
