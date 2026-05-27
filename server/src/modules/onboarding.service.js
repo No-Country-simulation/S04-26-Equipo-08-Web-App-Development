@@ -1,4 +1,5 @@
 import { db } from "../config/database.js";
+import { notifySender } from "../utils/notifySender.js";
 
 export const completePersonalInfo = async (userId, userRole, data) => {
   const {
@@ -47,7 +48,7 @@ export const completePersonalInfo = async (userId, userRole, data) => {
         user_id,
         onboarding_status
       )
-      VALUES ($1, 'INVITED')
+      VALUES ($1, 'IN_PROGRESS')
       RETURNING *
       `,
       [userId],
@@ -57,7 +58,16 @@ export const completePersonalInfo = async (userId, userRole, data) => {
   } else {
     contractorProfileId = contractorProfile.rows[0].id;
   }
-
+  const operatorId = await db.query(
+    "SELECT performed_by FROM onboarding_events WHERE contractor_profile_id = $1",
+    contractorProfileId,
+  );
+  if (operator.rowCount < 1)
+    throw new Error("We couldn't find the operator to notify.");
+  const operator = await db.query(
+    "SELECT email FROM users WHERE id=$1",
+    operatorId,
+  );
   const existingStep = await db.query(
     `
     SELECT *
@@ -151,9 +161,19 @@ export const completePersonalInfo = async (userId, userRole, data) => {
       $2
     )
     `,
-    [contractorProfileId, userId],
+    [contractorProfileId, operatorId.rows[0].performed_by],
   );
 
+  //Notify North Pay Assigned staff
+   await notifySender(
+    { userId: operatorId.rows[0].performed_by, email: operator.rows[0].email },
+    {
+      subject: `Completación de Fase Personal Info`,
+      title: "Fase Personal Info Completed",
+      emailMessage: `User ${userId} ha enviado la información en la fase Personal Info correctamente!`,
+    },
+    "email",
+  );
   return {
     message: "Personal info completed successfully",
   };
