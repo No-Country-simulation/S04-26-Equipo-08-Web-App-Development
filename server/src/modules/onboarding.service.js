@@ -17,13 +17,13 @@ export const completePersonalInfo = async (userId, userRole, data) => {
   }
 
   if (
-    !firstname ||
-    !lastname ||
-    !country ||
-    !city ||
-    !address ||
-    !document_type ||
-    !document_number ||
+    !firstname?.trim() ||
+    !lastname?.trim() ||
+    !country?.trim() ||
+    !city?.trim() ||
+    !address?.trim() ||
+    !document_type?.trim() ||
+    !document_number?.trim() ||
     !birth_date
   ) {
     throw new Error("Missing required fields");

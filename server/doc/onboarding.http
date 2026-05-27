@@ -7,7 +7,7 @@ POST {{baseUrl}}/register
 Content-Type: application/json
 
 {
-  "email": "contractor@test.com",
+  "email": "contractor_test@example.com",
   "password": "123456",
   "role": "contractor",
   "firstname": "Test",
@@ -18,19 +18,23 @@ Content-Type: application/json
 ###
 
 ### Login Contractor
+# Obtener JWT de un usuario contractor autenticado
+# Este token representa la identidad del usuario que completará su propio onboarding
 POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-  "email": "contractor@test.com",
+  "email": "contractor_test@example.com",
   "password": "123456"
 }
 
 ###
 
 ### Complete Personal Info
+# Completa el primer paso del onboarding usando el JWT del contractor
+# El endpoint usa la identidad del token, no permite actuar sobre otro usuario
 POST {{baseUrl}}/onboarding/personal-info
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjkzYzBiOTI0LTFhYzQtNDczMC1iYmZkLTdiZDczOGEyNWQyMyIsImVtYWlsIjoiY29udHJhY3RvckB0ZXN0LmNvbSIsInJvbGUiOiJjb250cmFjdG9yIiwiaWF0IjoxNzc5NzYzOTI5LCJleHAiOjE3Nzk3OTI3Mjl9.j7pPgp1Yz7bQZUXNx4TXcVb4v9WsHUrwogo5uw0slhA
+Authorization: Bearer PEGA_TOKEN_CONTRACTOR_ACA
 Content-Type: application/json
 
 {
@@ -47,15 +51,62 @@ Content-Type: application/json
 ###
 
 ### Retry Personal Info (Should Fail)
+# Verifica idempotencia: un contractor no puede completar este paso dos veces
 POST {{baseUrl}}/onboarding/personal-info
-Authorization: Bearer PEGA_EL_TOKEN_ACA
+Authorization: Bearer PEGA_TOKEN_CONTRACTOR_ACA
 Content-Type: application/json
 
 {
   "firstname": "Test",
   "lastname": "Contractor",
   "country": "Argentina",
-  "city": "Tandil",
+  "city": "Rauch",
+  "address": "Calle falsa 123",
+  "document_type": "dni",
+  "document_number": "12345678",
+  "birth_date": "2000-01-01"
+}
+
+###
+
+### Register Operator
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "operator_test@example.com",
+  "password": "123456",
+  "role": "operator",
+  "firstname": "Test",
+  "lastname": "Operator",
+  "phone": "1191112233"
+}
+
+###
+
+### Login Operator
+# Obtener JWT de un usuario autenticado con rol distinto a contractor
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "operator_test@example.com",
+  "password": "123456"
+}
+
+###
+
+### Complete Personal Info with Operator Token
+# Verifica control de acceso: solo contractors pueden usar este endpoint
+POST {{baseUrl}}/onboarding/personal-info
+Authorization: Bearer PEGA_TOKEN_OPERATOR_ACA
+Content-Type: application/json
+
+{
+  "firstname": "Test",
+  "lastname": "Operator",
+  "country": "Argentina",
+  "city": "Rauch",
   "address": "Calle falsa 123",
   "document_type": "dni",
   "document_number": "12345678",
