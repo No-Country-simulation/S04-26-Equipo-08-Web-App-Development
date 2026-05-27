@@ -1,7 +1,7 @@
 import { db } from "../../../config/database.js";
 import dotenv from "dotenv";
 import crypto from "crypto";
-import { uploadFile, theFileUrl } from "../../../utils/supabaseUpload.js";
+import { uploadFile } from "../../../utils/supabaseUpload.js";
 import { notifySender } from "../../../utils/notifySender.js";
 dotenv.config();
 export const documentUpload = async (userData, document, docType) => {
@@ -9,15 +9,14 @@ export const documentUpload = async (userData, document, docType) => {
     const { role, id, email } = userData;
     if (role != "contractor") return "You must be a Contractor to do this...";
     const verifyDocType = ["passport", "id_card", "tax_form", "address_proof"];
-    console.log(docType == "tax_form");
-    console.log(verifyDocType.includes(docType))
+    
     if (verifyDocType.includes(docType) == false) return "The DocType is invalid.";
     const contractorProfile = await db.query(
       "SELECT * FROM contractor_profiles WHERE user_id = $1",
       [id],
     );
-    console.log(contractorProfile)
-    if (!contractorProfile.rowCount == 0)
+    
+    if (contractorProfile.rowCount == 0)
       return "We couldn't find a contractorProfile linked to this User, try again later.";
     const getOperator = await db.query(
       "SELECT performed_by FROM onboarding_events WHERE contractor_profile_id = $1",
@@ -27,14 +26,16 @@ export const documentUpload = async (userData, document, docType) => {
       return "There was an error getting the Operator data... Try again later.";
 
     //Upload Logic
-    const fileName = `${crypto.randomUUID()}-${doc.originalname}`;
+    const extension = document.originalname.split(".").pop();
+    const fileName = `${crypto.randomUUID()}.${extension}`;
     const uploading = await uploadFile(document, fileName);
-    if (typeof uploading != "string") return { error: uploading };
-    const fileUrl = await theFileUrl(fileName);
+    
+    if (!uploading?.path) return { error: uploading };
+    
 
     const registeringDoc = await db.query(
       "INSERT INTO documents(contractor_profile_id, document_type, file_url, status) VALUES($1, $2, $3, $4)",
-      [contractorProfile.rows[0].id, docType, fileUrl, "pending"],
+      [contractorProfile.rows[0].id, docType, uploading.publicUrl, "pending"],
     );
 
     if (registeringDoc.rowCount > 0) {
@@ -60,12 +61,13 @@ export const documentUpload = async (userData, document, docType) => {
             emailMessage:
               "El usuario envió los docs en la fase Document Upload, pasando a la siguiente fase!",
           },
+          "email"
         );
 
         return notifyStaff.message
           ? {
               message: "Document Upload Phase Successfully Completed!",
-              file: fileUrl,
+              file: uploading.publicUrl,
             }
           : notifyStaff
       }

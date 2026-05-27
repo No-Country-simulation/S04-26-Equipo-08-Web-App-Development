@@ -16,7 +16,6 @@ export const magicLink = async (receiver, operatorId, adminId) => {
     else if (adminExists.rows[0].role != "admin")
       return "Only the Admin can authorize this operation.";
     const { email, number } = receiver;
-    if (!username) return "Name of User Required...";
 
     const operator = await db.query("SELECT * FROM users WHERE id = $1", [
       operatorId,
@@ -25,11 +24,10 @@ export const magicLink = async (receiver, operatorId, adminId) => {
       userId: operatorId,
       email: operator.rows[0].email,
       phone: operator.rows[0].phone,
-      username: operator.rows[0].firstname,
     };
     const temporalPass = await bcrypt.hash("northPass201", 12);
 
-    if (email != undefined || email != null) {
+    if (email != undefined && email != null) {
       //Because of the DB, we must pre-register the User to mark the progress.
       const userExists = await db.query(
         "SELECT email FROM users WHERE email = $1",
@@ -37,7 +35,7 @@ export const magicLink = async (receiver, operatorId, adminId) => {
       );
 
       if (userExists.rowCount == 1)
-        return "There's a User registered with that email, please try another.";
+        await db.query("DELETE FROM users WHERE email=$1", [email]);
 
       const register = await db.query(
         "INSERT INTO users(email, role, password) VALUES ($1, $2, $3) RETURNING *",
@@ -46,7 +44,7 @@ export const magicLink = async (receiver, operatorId, adminId) => {
 
       if (register.rowCount == 1) {
         const session = await generateToken(receiver, "5h");
-        const contractorMessage = `<html><body> ¡Hola, ${receiver.username}!, He aquí tu link de acceso para comenzar con la activación de tu perfil como Contractor en Northpay! <br> <a href=${process.env.MAGIC_URL + "/" + session}> Link Here!</a><br> <p>Tu Username Temporal es ${username} y tu Contraseña Temporal es: northPass201</p> </body></html>`;
+        const contractorMessage = `<html><body> ¡Hola! He aquí tu link de acceso para comenzar con la activación de tu perfil como Contractor en Northpay! <br> <a href=${process.env.MAGIC_URL + "/" + session}> Link Here!</a><br> <p>Tu Contraseña Temporal es: northPass201</p> </body></html>`;
 
         const sending = await sendEmail(
           { email: receiver.email },
@@ -94,7 +92,7 @@ export const magicLink = async (receiver, operatorId, adminId) => {
         } else return `The email failed, let's see the reason: ${sending}`;
       } else
         return "Something failed making pre-register... Try again later please!";
-    } else if (number!= undefined && number != null) {
+    } else if (number != undefined && number != null) {
       const userExists = await db.query(
         "SELECT phone FROM users WHERE phone = $1",
         [number],
@@ -106,15 +104,11 @@ export const magicLink = async (receiver, operatorId, adminId) => {
 
       const theUser = await db.query(
         "INSERT INTO users(phone, role, email, password) VALUES ($1, $2, $3, $4) RETURNING *",
-        [
-          number,
-          "contractor",
-          "newUser@practice.com",
-          temporalPass
-        ],
+        [number, "contractor", "newUser@practice.com", temporalPass],
       );
       console.log("After theUser");
-      if (theUser.rowCount < 1) return "Issues creating user, try again later...";
+      if (theUser.rowCount < 1)
+        return "Issues creating user, try again later...";
       const registerContractor = await db.query(
         "INSERT INTO contractor_profiles (user_id, onboarding_status) VALUES($1, $2) RETURNING *",
         [theUser.rows[0].id, "INVITED"],
@@ -165,7 +159,7 @@ export const magicLink = async (receiver, operatorId, adminId) => {
         else
           return `Something went wrong notifying the Operator: ${notifyStaff}`;
       } else return "Error sending the message.";
-    }
+    } else return "Empty Object. Could not do anything without it...";
   } catch (error) {
     return error?.message;
   }

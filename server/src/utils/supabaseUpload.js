@@ -3,27 +3,26 @@ import dotenv from "dotenv";
 dotenv.config();
 export const uploadFile = async (doc, fileName) => {
   try {
+    console.log("bucket:", process.env.BUCKET_NAME);
+    console.log("filename:", JSON.stringify(fileName));
+    const {d, e} = await supabase.storage.listBuckets();
+    console.log (d, e);
+
     const { data, error } = await supabase.storage
       .from(process.env.BUCKET_NAME)
       .upload(fileName, doc.buffer, {
-        contentType: doc.mimeType,
-        upsert: true,
+        contentType: doc.mimetype,
+        upsert: false,
       });
 
-    if (error) return error;
-    else return "File Successfully Uploaded to Supabase!";
-  } catch (error) {
-    return error;
-  }
-};
-
-export const theFileUrl = async (filename) => {
-  try {
-    const { data: publicUrlData } = await supabase.storage
+    if (error) throw error;
+    const { data: publicData } = supabase.storage
       .from(process.env.BUCKET_NAME)
-      .getPublicUrl(filename);
-    return { path: data.path, publicUrl: publicUrlData.publicUrl };
+      .getPublicUrl(fileName);
+
+    return { path: data.path, publicUrl: publicData.publicUrl };
   } catch (error) {
+    console.error(error)
     return error;
   }
 };

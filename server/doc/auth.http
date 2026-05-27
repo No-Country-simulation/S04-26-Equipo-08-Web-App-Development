@@ -23,12 +23,12 @@ POST {{baseUrl}}/register
 Content-Type: application/json
 
 {
-    "email": "repollo@gmail.com",
+    "email": "repollo2@gmail.com",
     "password": "superPassssszzz",
-    "role": "contractor",
+    "role": "admin",
     "firstname": "Northpay",
-    "lastname": "Practice Contractor",
-    "phone": "+5835246246523523"
+    "lastname": "Practice Admin",
+    "phone": "+5835246546523523"
 }
 
 ### Send Magic Link
@@ -37,10 +37,8 @@ POST {{baseUrl}}/magicLink
 Content-Type: application/json
 
 {
-    "method": "email",
     "receiver": {
         "number": "+584264000136",
-        "username": "Dexter",
         "email": "something35@gmail.com"
     },
     "operatorId": "f0fc0f44-b48f-4f56-99dc-6b59e4897b0a",
