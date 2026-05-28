@@ -1,0 +1,20 @@
+### Northpay Backend - Contractor System Phases
+@baseUrl =http://localhost:3000/api/v1
+### Document Upload
+# Éste endpoint simula la subida de documentos por parte de un User Contractor
+POST {{baseUrl}}/doc_upload
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="docType"
+
+tax_form
+
+--MyBoundary
+Content-Disposition: form-data; name="file"; filename="Linkedinlog.png"
+Content-Type: image/png
+
+< ../images/Linkedinlog.png
+
+
+--MyBoundary--

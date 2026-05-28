@@ -12,6 +12,7 @@ import bodyParser from "body-parser";
 import adminRoutes from "./routes/seed/admin.js";
 import { authenticateToken } from "./utils/jwt.js";
 
+
 dotenv.config();
 
 const app = express();
@@ -21,6 +22,7 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Origin",
