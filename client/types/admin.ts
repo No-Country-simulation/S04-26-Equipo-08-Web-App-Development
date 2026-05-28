@@ -1,4 +1,4 @@
-import type { AdminContractorStatus, StepName, OnboardingStatus } from "./onboarding.types";
+import type { StepName } from "./onboarding.types";
 
 export interface PersonalInfoData {
   firstname: string;
@@ -48,12 +48,9 @@ export interface Contractor {
   id: string;
   name: string;
   email: string;
-  specialty: string;
-  date: string;
-  status: AdminContractorStatus;
-  onboardingStatus: OnboardingStatus;
-  image: string;
   phone: string;
   country: string;
+  created_at: string;
+  is_active: boolean;
   steps: ContractorStep[];
 }

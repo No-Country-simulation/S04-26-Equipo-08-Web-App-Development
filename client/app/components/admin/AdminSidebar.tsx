@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Archive,
@@ -29,16 +29,14 @@ export default function AdminSidebar() {
       router.push('/auth/login')
     }
     //
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
+  const [collapsed, setCollapsed] = useState(false);
 
-    return (
-      localStorage.getItem("admin-sidebar") ===
-      "true"
-    );
-  });
+  useEffect(() => {
+    const stored = localStorage.getItem("admin-sidebar");
+    if (stored === "true") {
+      setCollapsed(true);
+    }
+  }, []);
 
   const toggleSidebar = () => {
     const newValue = !collapsed;

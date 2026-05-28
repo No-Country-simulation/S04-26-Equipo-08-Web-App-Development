@@ -5,14 +5,10 @@ export const contractors: Contractor[] = [
     id: "1",
     name: "Marcus Thorne",
     email: "m.thorne@cloudmail.com",
-    specialty: "Structural Engineer",
-    date: "Oct 24, 2024",
-    status: "Under Review",
-    onboardingStatus: "IN_PROGRESS",
     phone: "+1 555-0101",
     country: "USA",
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400",
+    created_at: "2024-10-24T10:00:00Z",
+    is_active: true,
     steps: [
       {
         step: "personal_info",
@@ -77,14 +73,10 @@ export const contractors: Contractor[] = [
     id: "2",
     name: "Sarah Jenkins",
     email: "s.jenkins@archstudio.io",
-    specialty: "Project Manager",
-    date: "Oct 23, 2024",
-    status: "Verified",
-    onboardingStatus: "ACTIVE",
     phone: "+1 555-0102",
     country: "Canada",
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400",
+    created_at: "2024-10-23T10:00:00Z",
+    is_active: true,
     steps: [
       {
         step: "personal_info",
@@ -149,14 +141,10 @@ export const contractors: Contractor[] = [
     id: "3",
     name: "Carlos Méndez",
     email: "c.mendez@construrama.mx",
-    specialty: "Electrical Engineer",
-    date: "Oct 25, 2024",
-    status: "Pending Review",
-    onboardingStatus: "PENDING_VERIFICATION",
     phone: "+52 555-0103",
     country: "Mexico",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400",
+    created_at: "2024-10-25T10:00:00Z",
+    is_active: true,
     steps: [
       {
         step: "personal_info",
@@ -221,14 +209,10 @@ export const contractors: Contractor[] = [
     id: "4",
     name: "Ana Lucía Romero",
     email: "ana.romero@techsol.co",
-    specialty: "Software Developer",
-    date: "Oct 22, 2024",
-    status: "Pending Review",
-    onboardingStatus: "IN_PROGRESS",
     phone: "+57 555-0104",
     country: "Colombia",
-    image:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=400",
+    created_at: "2024-10-22T10:00:00Z",
+    is_active: true,
     steps: [
       {
         step: "personal_info",
@@ -277,14 +261,10 @@ export const contractors: Contractor[] = [
     id: "5",
     name: "James Wilson",
     email: "j.wilson@buildcorp.uk",
-    specialty: "Architect",
-    date: "Oct 21, 2024",
-    status: "Verified",
-    onboardingStatus: "ACTIVE",
     phone: "+44 555-0105",
     country: "UK",
-    image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400",
+    created_at: "2024-10-21T10:00:00Z",
+    is_active: true,
     steps: [
       {
         step: "personal_info",
@@ -346,9 +326,3 @@ export const contractors: Contractor[] = [
     ],
   },
 ];
-
-export const statusColors: Record<string, string> = {
-  Verified: "text-green-600 bg-green-100",
-  "Pending Review": "text-yellow-600 bg-yellow-100",
-  "Under Review": "text-blue-600 bg-blue-100",
-};

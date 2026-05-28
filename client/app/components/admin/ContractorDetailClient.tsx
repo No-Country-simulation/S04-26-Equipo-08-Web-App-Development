@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -13,11 +12,20 @@ import {
   FileText,
   Download,
 } from "lucide-react";
-import { Contractor, PersonalInfoData, DocumentData, ContractData, PaymentData, IdentityData } from "@/types/admin";
-import { statusColors } from "@/data/admin-data";
+import { useUser } from "@/hooks/queries/useUsers";
+import type { BackendUser } from "@/types/onboarding.types";
+import type {
+  Contractor,
+  ContractorStep,
+  PersonalInfoData,
+  DocumentData,
+  ContractData,
+  PaymentData,
+  IdentityData,
+} from "@/types/admin";
 
 interface Props {
-  contractor: Contractor;
+  id: string;
 }
 
 function PersonalInfoPreview({ data }: { data: PersonalInfoData }) {
@@ -46,8 +54,8 @@ function PersonalInfoPreview({ data }: { data: PersonalInfoData }) {
 
 function DocumentPreview({ data }: { data: DocumentData }) {
   const files = [
-    { label: "Identificación", file: data.idFile, icon: "🪪" },
-    { label: "Documentación fiscal", file: data.taxFile, icon: "📄" },
+    { label: "Identificación", file: data.idFile, icon: "\u{1FAAA}" },
+    { label: "Documentación fiscal", file: data.taxFile, icon: "\u{1F4C4}" },
   ];
   return (
     <div className="space-y-3">
@@ -58,7 +66,7 @@ function DocumentPreview({ data }: { data: DocumentData }) {
             <div>
               <p className="text-sm font-medium text-slate-700">{f.label}</p>
               <p className="text-xs text-slate-400">
-                {f.file.name || "No subido aún"}
+                {f.file.name || "No subido aun"}
               </p>
             </div>
           </div>
@@ -108,7 +116,7 @@ function PaymentPreview({ data }: { data: PaymentData }) {
   return (
     <div className="grid grid-cols-2 gap-3 text-sm">
       <div>
-        <p className="text-xs text-slate-400 uppercase">Método</p>
+        <p className="text-xs text-slate-400 uppercase">Metodo</p>
         <p className="font-medium text-slate-700">{methodLabels[data.methodType] || data.methodType}</p>
       </div>
       <div>
@@ -137,7 +145,7 @@ function IdentityPreview({ data }: { data: IdentityData }) {
             {data.status === "verified"
               ? "Verificado"
               : data.status === "failed"
-              ? "Falló"
+              ? "Fallo"
               : "Pendiente"}
           </p>
         </div>
@@ -162,35 +170,114 @@ function IdentityPreview({ data }: { data: IdentityData }) {
   );
 }
 
-export default function ContractorDetailClient({ contractor: initial }: Props) {
-  const [contractor, setContractor] = useState(initial);
+function generateMockSteps(user: BackendUser): ContractorStep[] {
+  const name = `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || user.email;
+  const mockPersonalInfo: PersonalInfoData = {
+    firstname: user.firstname ?? "",
+    lastname: user.lastname ?? "",
+    email: user.email,
+    phone: user.phone ?? "",
+    birthDate: "1990-01-15",
+    country: "No especificado",
+    city: "No especificado",
+    address: "No especificado",
+    documentType: "passport",
+    documentNumber: "PEND-001",
+  };
+  const mockDoc: DocumentData = {
+    idFile: { name: "identificacion_pendiente.pdf", url: "#" },
+    taxFile: { name: "documento_fiscal_pendiente.pdf", url: "#" },
+  };
+  const mockContract: ContractData = {
+    documentId: "SP-" + Date.now().toString(36),
+    signedAt: new Date().toISOString(),
+    signatureImage: "/signature-placeholder.png",
+  };
+  const mockPayment: PaymentData = {
+    methodType: "bank_transfer",
+    accountHolder: name,
+    accountNumber: "****0000",
+    bankName: "Por confirmar",
+  };
+  const mockIdentity: IdentityData = {
+    status: "pending",
+    verifiedAt: null,
+    notes: "Pendiente de verificacion",
+  };
+
+  return [
+    { step: "personal_info", label: "Datos personales", status: "approved", data: mockPersonalInfo },
+    { step: "document_upload", label: "Documentos", status: "approved", data: mockDoc },
+    { step: "contract_sign", label: "Firma de contrato", status: "approved", data: mockContract },
+    { step: "payment_setup", label: "Metodo de pago", status: "in_progress", data: mockPayment },
+    { step: "identity_verification", label: "Verificacion de identidad", status: "pending", data: mockIdentity },
+  ];
+}
+
+export default function ContractorDetailClient({ id }: Props) {
+  const { data: user, isLoading, error } = useUser(id);
   const [expandedStep, setExpandedStep] = useState<number | null>(0);
 
+  const [steps, setSteps] = useState<ContractorStep[] | null>(null);
+
+  const resolvedSteps = useMemo(() => {
+    if (steps) return steps;
+    if (!user) return null;
+    return generateMockSteps(user);
+  }, [user, steps]);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-3xl bg-[#e8eaf0] p-8 shadow-xl">
+        <p className="text-slate-500">Cargando contratista...</p>
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <div>
+        <Link
+          href="/admin/contractors"
+          className="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors mb-6"
+        >
+          <ArrowLeft size={20} />
+          <span className="font-medium">Volver a Contratistas</span>
+        </Link>
+        <div className="rounded-3xl bg-[#e8eaf0] p-8 shadow-xl">
+          <p className="text-red-500">Error al cargar el contratista</p>
+        </div>
+      </div>
+    );
+  }
+
+  const name = `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || user.email;
+
   const handleApprove = (stepIndex: number) => {
-    setContractor((prev) => {
-      const steps = [...prev.steps];
-      steps[stepIndex] = { ...steps[stepIndex], status: "approved" };
-      return { ...prev, steps };
+    setSteps((prev) => {
+      const current = prev ?? generateMockSteps(user);
+      const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: "approved" as const } : s));
+      return copy;
     });
   };
 
   const handleReject = (stepIndex: number) => {
-    setContractor((prev) => {
-      const steps = [...prev.steps];
-      steps[stepIndex] = { ...steps[stepIndex], status: "rejected" };
-      return { ...prev, steps };
+    setSteps((prev) => {
+      const current = prev ?? generateMockSteps(user);
+      const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: "rejected" as const } : s));
+      return copy;
     });
   };
 
   const handleRevertToPending = (stepIndex: number) => {
-    setContractor((prev) => {
-      const steps = [...prev.steps];
-      steps[stepIndex] = { ...steps[stepIndex], status: "pending" };
-      return { ...prev, steps };
+    setSteps((prev) => {
+      const current = prev ?? generateMockSteps(user);
+      const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: "pending" as const } : s));
+      return copy;
     });
   };
 
-  const approvedCount = contractor.steps.filter(
+  const approvedCount = (resolvedSteps ?? []).filter(
     (s) => s.status === "approved"
   ).length;
 
@@ -209,11 +296,11 @@ export default function ContractorDetailClient({ contractor: initial }: Props) {
     }
   };
 
-  const renderStepContent = (step: (typeof contractor.steps)[0]) => {
+  const renderStepContent = (step: ContractorStep) => {
     if (!step.data) {
       return (
         <p className="text-sm text-slate-400 italic">
-          El contratista aún no ha enviado esta información.
+          El contratista aun no ha enviado esta informacion.
         </p>
       );
     }
@@ -246,43 +333,35 @@ export default function ContractorDetailClient({ contractor: initial }: Props) {
       {/* Profile Header */}
       <div className="rounded-3xl bg-[#e8eaf0] p-8 shadow-xl mb-8">
         <div className="flex items-start gap-6">
-          <Image
-            width={120}
-            height={120}
-            src={contractor.image}
-            alt={contractor.name}
-            className="h-24 w-24 rounded-full object-cover"
-          />
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/20 text-3xl font-bold text-primary">
+            {name.charAt(0)}
+          </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold">{contractor.name}</h1>
-                <p className="text-slate-500 mt-1">{contractor.email}</p>
+                <h1 className="text-3xl font-bold">{name}</h1>
+                <p className="text-slate-500 mt-1">{user.email}</p>
               </div>
-              <span
-                className={`inline-block rounded-full px-4 py-1.5 text-sm font-semibold ${
-                  statusColors[contractor.status]
-                }`}
-              >
-                {contractor.status === "Verified"
-                  ? "Verificado"
-                  : contractor.status === "Pending Review"
-                  ? "Pendiente"
-                  : "En Revisión"}
+              <span className="inline-block rounded-full px-4 py-1.5 text-sm font-semibold text-blue-600 bg-blue-100">
+                {user.role === "admin" ? "Admin" : user.role === "operator" ? "Operador" : "Contratista"}
               </span>
             </div>
             <div className="grid grid-cols-3 gap-6 mt-6">
               <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold">Especialidad</p>
-                <p className="font-medium">{contractor.specialty}</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Rol</p>
+                <p className="font-medium capitalize">{user.role}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold">País</p>
-                <p className="font-medium">{contractor.country}</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Telefono</p>
+                <p className="font-medium">{user.phone || "No registrado"}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold">Teléfono</p>
-                <p className="font-medium">{contractor.phone}</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Registro</p>
+                <p className="font-medium">
+                  {new Date(user.created_at).toLocaleDateString("es-ES", {
+                    dateStyle: "long",
+                  })}
+                </p>
               </div>
             </div>
           </div>
@@ -294,12 +373,16 @@ export default function ContractorDetailClient({ contractor: initial }: Props) {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Pasos de Onboarding</h2>
           <span className="text-sm text-slate-500">
-            {approvedCount} de {contractor.steps.length} aprobados
+            {approvedCount} de {resolvedSteps?.length ?? 0} aprobados
           </span>
         </div>
 
+        <p className="text-xs text-slate-400 mb-4 italic">
+          * Datos de demostracion &mdash; el backend de pasos estara disponible proximamente.
+        </p>
+
         <div className="space-y-3">
-          {contractor.steps.map((step, index) => {
+          {(resolvedSteps ?? []).map((step, index) => {
             const isExpanded = expandedStep === index;
             const badge = statusBadge(step.status);
 

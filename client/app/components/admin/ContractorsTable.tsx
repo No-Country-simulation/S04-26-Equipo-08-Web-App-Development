@@ -1,15 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { contractors as initialContractors } from "@/data/admin-data";
+import { useUsers, useDeleteUser } from "@/hooks/queries/useUsers";
 import ContractorRow from "./ContractorRow";
 
 export default function ContractorsTable() {
-  const [contractors, setContractors] = useState(initialContractors);
+  const { data: contractors, isLoading, error } = useUsers();
+  const deleteMutation = useDeleteUser();
 
   const handleDelete = (id: string) => {
-    setContractors((prev) => prev.filter((c) => c.id !== id));
+    deleteMutation.mutate(id);
   };
+
+  if (isLoading) {
+    return (
+      <div className="rounded-3xl bg-[#e8eaf0] p-6 shadow-xl">
+        <p className="text-slate-500">Cargando contratistas...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl bg-[#e8eaf0] p-6 shadow-xl">
+        <p className="text-red-500">Error al cargar contratistas</p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-3xl bg-[#e8eaf0] p-6 shadow-xl">
@@ -21,14 +37,12 @@ export default function ContractorsTable() {
           <thead>
             <tr className="border-b border-slate-300 text-left">
               <th className="pb-4">Contratista</th>
-              <th className="pb-4">Especialidad</th>
               <th className="pb-4">Fecha de Registro</th>
-              <th className="pb-4">Estado</th>
               <th className="pb-4 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {contractors.map((contractor) => (
+            {contractors?.map((contractor) => (
               <ContractorRow
                 key={contractor.id}
                 contractor={contractor}

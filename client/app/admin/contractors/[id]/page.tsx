@@ -1,5 +1,3 @@
-import { contractors } from "@/data/admin-data";
-import { notFound } from "next/navigation";
 import ContractorDetailClient from "@/app/components/admin/ContractorDetailClient";
 
 interface Props {
@@ -10,11 +8,6 @@ interface Props {
 
 export default async function ContractorDetailPage({ params }: Props) {
   const { id } = await params;
-  const contractor = contractors.find((c) => c.id === id);
 
-  if (!contractor) {
-    notFound();
-  }
-
-  return <ContractorDetailClient contractor={contractor} />;
+  return <ContractorDetailClient id={id} />;
 }

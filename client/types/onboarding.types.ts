@@ -119,19 +119,14 @@ export interface OnboardingEvent {
   created_at: string;
 }
 
-export type AdminContractorStatus =
-  | "Verified"
-  | "Pending Review"
-  | "Under Review";
-
-export interface AdminContractor {
+export interface BackendUser {
   id: string;
-  name: string;
   email: string;
-  specialty: string;
-  date: string;
-  status: AdminContractorStatus;
-  image: string;
-  onboarding_status: OnboardingStatus;
-  current_step: StepName;
+  role: string;
+  firstname: string;
+  lastname: string;
+  phone: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
