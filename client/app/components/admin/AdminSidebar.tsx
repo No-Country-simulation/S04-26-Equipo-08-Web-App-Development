@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogOut,
   MailCheckIcon,
+  Shield,
   Users,
 } from "lucide-react";
 
@@ -20,8 +21,8 @@ import { useAuthStore } from "@/app/store/use-auth-store";
 
 export default function AdminSidebar() {
   const router = useRouter()
-  //
-  const logout = useAuthStore((state) => state.logout)
+  const { user, logout } = useAuthStore()
+  const isAdmin = user?.role === "admin";
   
     const handleLogout = () => {
       logout()
@@ -107,6 +108,14 @@ export default function AdminSidebar() {
             href="/admin/add-contractor"
           />
 
+          {isAdmin && (
+            <SidebarItem
+              icon={Shield}
+              label={collapsed ? "" : "Roles"}
+              href="/admin/roles"
+            />
+          )}
+
           <SidebarItem
             icon={FileText}
             label={
@@ -114,8 +123,7 @@ export default function AdminSidebar() {
                 ? ""
                 : "Aprobaciones"
             }
-            href="/admin/approval
-"
+            href="/admin/approval"
           />
 
           <SidebarItem

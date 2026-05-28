@@ -13,9 +13,9 @@ import {
   Download,
 } from "lucide-react";
 import { useUser } from "@/hooks/queries/useUsers";
+import { useContractorProgress } from "@/hooks/queries/useContractorProgress";
 import type { BackendUser } from "@/types/onboarding.types";
 import type {
-  Contractor,
   ContractorStep,
   PersonalInfoData,
   DocumentData,
@@ -170,8 +170,16 @@ function IdentityPreview({ data }: { data: IdentityData }) {
   );
 }
 
-function generateMockSteps(user: BackendUser): ContractorStep[] {
+function buildSteps(user: BackendUser, stepsFromDb?: { step_name: string; completed: boolean }[]): ContractorStep[] {
   const name = `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || user.email;
+
+  const statusMap: Record<string, string> = {};
+  if (stepsFromDb) {
+    for (const s of stepsFromDb) {
+      statusMap[s.step_name] = s.completed ? "completed" : "pending";
+    }
+  }
+
   const mockPersonalInfo: PersonalInfoData = {
     firstname: user.firstname ?? "",
     lastname: user.lastname ?? "",
@@ -205,17 +213,24 @@ function generateMockSteps(user: BackendUser): ContractorStep[] {
     notes: "Pendiente de verificacion",
   };
 
-  return [
-    { step: "personal_info", label: "Datos personales", status: "approved", data: mockPersonalInfo },
-    { step: "document_upload", label: "Documentos", status: "approved", data: mockDoc },
-    { step: "contract_sign", label: "Firma de contrato", status: "approved", data: mockContract },
-    { step: "payment_setup", label: "Metodo de pago", status: "in_progress", data: mockPayment },
-    { step: "identity_verification", label: "Verificacion de identidad", status: "pending", data: mockIdentity },
+  const steps: { step: ContractorStep["step"]; label: string; data: unknown }[] = [
+    { step: "personal_info", label: "Datos personales", data: mockPersonalInfo },
+    { step: "document_upload", label: "Documentos", data: mockDoc },
+    { step: "contract_sign", label: "Firma de contrato", data: mockContract },
+    { step: "payment_setup", label: "Metodo de pago", data: mockPayment },
+    { step: "identity_verification", label: "Verificacion de identidad", data: mockIdentity },
   ];
+
+  return steps.map((s) => ({
+    ...s,
+    status: statusMap[s.step] || "pending",
+    data: s.data as ContractorStep["data"],
+  })) as ContractorStep[];
 }
 
 export default function ContractorDetailClient({ id }: Props) {
   const { data: user, isLoading, error } = useUser(id);
+  const { data: progress } = useContractorProgress(id);
   const [expandedStep, setExpandedStep] = useState<number | null>(0);
 
   const [steps, setSteps] = useState<ContractorStep[] | null>(null);
@@ -223,8 +238,8 @@ export default function ContractorDetailClient({ id }: Props) {
   const resolvedSteps = useMemo(() => {
     if (steps) return steps;
     if (!user) return null;
-    return generateMockSteps(user);
-  }, [user, steps]);
+    return buildSteps(user, progress?.steps);
+  }, [user, progress, steps]);
 
   if (isLoading) {
     return (
@@ -255,7 +270,7 @@ export default function ContractorDetailClient({ id }: Props) {
 
   const handleApprove = (stepIndex: number) => {
     setSteps((prev) => {
-      const current = prev ?? generateMockSteps(user);
+      const current = prev ?? buildSteps(user, progress?.steps);
       const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: "approved" as const } : s));
       return copy;
     });
@@ -263,7 +278,7 @@ export default function ContractorDetailClient({ id }: Props) {
 
   const handleReject = (stepIndex: number) => {
     setSteps((prev) => {
-      const current = prev ?? generateMockSteps(user);
+      const current = prev ?? buildSteps(user, progress?.steps);
       const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: "rejected" as const } : s));
       return copy;
     });
@@ -271,8 +286,9 @@ export default function ContractorDetailClient({ id }: Props) {
 
   const handleRevertToPending = (stepIndex: number) => {
     setSteps((prev) => {
-      const current = prev ?? generateMockSteps(user);
-      const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: "pending" as const } : s));
+      const current = prev ?? buildSteps(user, progress?.steps);
+      const wasCompleted = progress?.steps?.find((s) => s.step_name === current[stepIndex]?.step)?.completed;
+      const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: (wasCompleted ? "completed" : "pending") as const } : s));
       return copy;
     });
   };
@@ -287,6 +303,8 @@ export default function ContractorDetailClient({ id }: Props) {
         return { text: "Aprobado", classes: "text-green-600 bg-green-100" };
       case "rejected":
         return { text: "Rechazado", classes: "text-red-600 bg-red-100" };
+      case "completed":
+        return { text: "Completado", classes: "text-blue-600 bg-blue-100" };
       case "pending":
         return { text: "Pendiente", classes: "text-slate-400 bg-slate-100" };
       case "in_progress":
@@ -378,7 +396,7 @@ export default function ContractorDetailClient({ id }: Props) {
         </div>
 
         <p className="text-xs text-slate-400 mb-4 italic">
-          * Datos de demostracion &mdash; el backend de pasos estara disponible proximamente.
+          * El estado de cada paso refleja el progreso real. Los datos de detalle son de demostracion.
         </p>
 
         <div className="space-y-3">
@@ -435,13 +453,13 @@ export default function ContractorDetailClient({ id }: Props) {
                         <button
                           onClick={() => handleRevertToPending(index)}
                           className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                            step.status === "pending"
+                            step.status === "pending" || step.status === "completed"
                               ? "bg-slate-400 text-white cursor-default"
                               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                           }`}
                         >
                           <Clock size={16} />
-                          Pendiente
+                          Revertir
                         </button>
                         <button
                           onClick={() => handleReject(index)}

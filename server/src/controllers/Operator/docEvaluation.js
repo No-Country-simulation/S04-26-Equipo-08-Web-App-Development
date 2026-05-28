@@ -1,4 +1,4 @@
-import { db } from "../../config/database";
+import { db } from "../../config/database.js";
 import { notifySender } from "../../utils/notifySender.js";
 export const docEvaluation = async (docId, operatorId, rejectionReason) => {
   try {

@@ -13,7 +13,7 @@ export const notifySender = async (userData, contentInfo, type) => {
         { subject: contentInfo.subject, message: contentInfo.emailMessage },
       );
       console.log(`Aquí es después del Notify Email`);
-      if (notifyEmail != undefined) {
+      if (notifyEmail && typeof notifyEmail === "object" && notifyEmail.accepted) {
         const notifyDB = await db.query(
           "INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, $4)",
           [userId, contentInfo.title, contentInfo.emailMessage, type],
@@ -58,22 +58,22 @@ export const notifySender = async (userData, contentInfo, type) => {
         phone,
         `${contentInfo.whatsappMessage}`,
       );
-      if (notifyEmail != undefined && whatsNotification.error == null) {
+      if (notifyEmail && typeof notifyEmail === "object" && notifyEmail.accepted) {
         const notifyDBByEmail = await db.query(
-          "INSERT INTO notifications (user_id, title, message, type,) VALUES ($1, $2, $3, $4)",
-          [userId, contentInfo.title, contentInfo.message, "email"],
+          "INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, $4)",
+          [userId, contentInfo.title, contentInfo.emailMessage, "email"],
         );
         const notifyDBWhats = await db.query(
-          "INSERT INTO notifications (user_id, title, message, type,) VALUES ($1, $2, $3, $4)",
-          [userId, contentInfo.title, contentInfo.message, "whatsapp"],
+          "INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, $4)",
+          [userId, contentInfo.title, contentInfo.whatsappMessage, "whatsapp"],
         );
+
+        if (notifyDBByEmail.rows.length > 0 && notifyDBWhats.rows.length > 0)
+          return { message: "Success!" };
+        else
+          return "Something went wrong trying to send both notifications, try again later...";
       } else
         return "There was a problem sending one of the messages, try again later...";
-
-      if (notifyDBByEmail.rows.length > 0 && notifyDBWhats.rows.length > 0)
-        return { message: "Success!" };
-      else
-        return "Something went wrong trying to send both notifications, try again later...";
     }
   } catch (error) {
     console.log(error);

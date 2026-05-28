@@ -1,4 +1,4 @@
-import { docEvaluation } from "../../controllers/Operator/docEvaluation";
+import { docEvaluation } from "../../controllers/Operator/docEvaluation.js";
 import { errorResponse, successResponse } from "../../utils/response.js";
 export const docEvaluationHandler = async (req, res) => {
   try {

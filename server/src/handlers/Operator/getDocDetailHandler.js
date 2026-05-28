@@ -1,6 +1,6 @@
-import { documentDetail } from "../../controllers/Operator/documentDetail";
-import { errorResponse, successResponse } from "../../utils/response";
-import { operatorAndAdminOnly } from "../../utils/verifyRole";
+import { documentDetail } from "../../controllers/Operator/documentDetail.js";
+import { errorResponse, successResponse } from "../../utils/response.js";
+import { operatorAndAdminOnly } from "../../utils/verifyRole.js";
 
 export const docDetailHandler = async (req, res) => {
   try {

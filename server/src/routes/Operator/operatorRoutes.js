@@ -1,8 +1,12 @@
 import {Router} from "express";
-import { getDocHandler } from "../../handlers/Operator/getDocHandler";
-import {authenticateToken} from "../../utils/jwt"
-import { docEvaluationHandler } from "../../handlers/Operator/docEvaluationHandler";
+import { getDocHandler } from "../../handlers/Operator/getDocHandler.js";
+import { authenticateToken } from "../../utils/jwt.js";
+import { authorizeRole } from "../../middlewares/authorizeRole.js";
+import { docEvaluationHandler } from "../../handlers/Operator/docEvaluationHandler.js";
+
 const operatorRoutes = Router();
 
-operatorRoutes.get("/docs", authenticateToken, getDocHandler);
-operatorRoutes.patch("/evaluation", authenticateToken, docEvaluationHandler)
+operatorRoutes.get("/docs", authenticateToken, authorizeRole("admin", "operator"), getDocHandler);
+operatorRoutes.patch("/evaluation", authenticateToken, authorizeRole("admin", "operator"), docEvaluationHandler);
+
+export default operatorRoutes;

@@ -1,6 +1,46 @@
 import { db } from "../config/database.js";
 import { notifySender } from "../utils/notifySender.js";
 
+export const getOnboardingProgress = async (userId) => {
+  const profile = await db.query(
+    "SELECT id, onboarding_status FROM contractor_profiles WHERE user_id = $1",
+    [userId],
+  );
+
+  if (profile.rows.length === 0) {
+    return {
+      profileExists: false,
+      onboardingStatus: null,
+      steps: [],
+    };
+  }
+
+  const profileId = profile.rows[0].id;
+
+  const steps = await db.query(
+    `
+    SELECT step_name, completed, completed_at, notes
+    FROM onboarding_steps
+    WHERE contractor_profile_id = $1
+    ORDER BY
+      CASE step_name
+        WHEN 'personal_info' THEN 1
+        WHEN 'document_upload' THEN 2
+        WHEN 'contract_sign' THEN 3
+        WHEN 'payment_setup' THEN 4
+        WHEN 'identity_verification' THEN 5
+      END
+    `,
+    [profileId],
+  );
+
+  return {
+    profileExists: true,
+    onboardingStatus: profile.rows[0].onboarding_status,
+    steps: steps.rows,
+  };
+};
+
 export const completePersonalInfo = async (userId, userRole, data) => {
   const {
     firstname,
@@ -58,15 +98,16 @@ export const completePersonalInfo = async (userId, userRole, data) => {
   } else {
     contractorProfileId = contractorProfile.rows[0].id;
   }
-  const operatorId = await db.query(
+  const operatorEvent = await db.query(
     "SELECT performed_by FROM onboarding_events WHERE contractor_profile_id = $1",
-    contractorProfileId,
+    [contractorProfileId],
   );
-  if (operator.rowCount < 1)
+  if (operatorEvent.rowCount < 1)
     throw new Error("We couldn't find the operator to notify.");
+  const operatorId = operatorEvent.rows[0].performed_by;
   const operator = await db.query(
     "SELECT email FROM users WHERE id=$1",
-    operatorId,
+    [operatorId],
   );
   const existingStep = await db.query(
     `
@@ -161,19 +202,31 @@ export const completePersonalInfo = async (userId, userRole, data) => {
       $2
     )
     `,
-    [contractorProfileId, operatorId.rows[0].performed_by],
+    [contractorProfileId, operatorId],
   );
 
-  //Notify North Pay Assigned staff
-   await notifySender(
-    { userId: operatorId.rows[0].performed_by, email: operator.rows[0].email },
+  const contractor = await db.query("SELECT id, email FROM users WHERE id = $1", [userId]);
+
+  await notifySender(
+    { userId: operatorId, email: operator.rows[0].email },
     {
-      subject: `Completación de Fase Personal Info`,
-      title: "Fase Personal Info Completed",
-      emailMessage: `User ${userId} ha enviado la información en la fase Personal Info correctamente!`,
+      subject: "Completación de Fase Personal Info",
+      title: "Fase Personal Info Completada",
+      emailMessage: `El contratista ${userId} ha completado la información personal correctamente.`,
     },
     "email",
   );
+
+  await notifySender(
+    { userId: contractor.rows[0].id, email: contractor.rows[0].email },
+    {
+      subject: "Información Personal Recibida",
+      title: "Información Personal Recibida",
+      emailMessage: "Hemos recibido tu información personal correctamente. Continúa con el siguiente paso del onboarding.",
+    },
+    "email",
+  );
+
   return {
     message: "Personal info completed successfully",
   };

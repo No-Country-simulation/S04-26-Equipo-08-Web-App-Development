@@ -53,7 +53,7 @@ export default function LoginForm() {
     "success"
   );
 
-  if (response.user.role === 'admin') {
+  if (response.user.role === 'admin' || response.user.role === 'operator') {
     router.push('/admin');
   } else {
     router.push('/');

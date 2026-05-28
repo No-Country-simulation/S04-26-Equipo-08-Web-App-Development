@@ -1,5 +1,6 @@
 import { apiFetch } from "./api";
 import type { BackendUser } from "@/types/onboarding.types";
+import type { OnboardingProgress } from "./onboarding.service";
 
 export async function getUsers() {
   return apiFetch<BackendUser[]>("/users");
@@ -46,4 +47,8 @@ export async function updateUser(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+}
+
+export async function getContractorProgress(id: string) {
+  return apiFetch<OnboardingProgress>(`/onboarding/progress/${id}`);
 }

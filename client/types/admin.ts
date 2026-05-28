@@ -40,7 +40,7 @@ export interface IdentityData {
 export interface ContractorStep {
   step: StepName;
   label: string;
-  status: "pending" | "approved" | "rejected" | "in_progress";
+  status: "pending" | "completed" | "approved" | "rejected" | "in_progress";
   data?: PersonalInfoData | DocumentData | ContractData | PaymentData | IdentityData;
 }
 
