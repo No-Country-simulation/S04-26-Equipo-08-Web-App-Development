@@ -3,9 +3,9 @@ import ContractorsTable from "@/app/components/admin/ContractorsTable";
 
 export default function AdminPage() {
   return (
-    <>
+    <div>
       <StatsGrid />
       <ContractorsTable />
-    </>
+    </div>
   );
 }
