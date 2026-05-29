@@ -46,13 +46,17 @@ export const magicLink = async (receiver, operatorId, adminId) => {
       const session = await generateToken(receiver, "5h");
       const contractorMessage = `<html><body> ¡Hola! He aquí tu link de acceso para comenzar con la activación de tu perfil como Contractor en Northpay! <br> <a href=${process.env.MAGIC_URL + "/" + session}> Link Here!</a><br> <p>Tu Contraseña Temporal es: northPass201</p> </body></html>`;
 
-      const sending = await sendEmail(
-        { email: receiver.email },
-        { subject: "NorthPay Email", message: contractorMessage },
-      );
+      try {
+        const sending = await sendEmail(
+          { email: receiver.email },
+          { subject: "NorthPay Email", message: contractorMessage },
+        );
 
-      if (sending?.rejected?.length !== 0) {
-        throw createError(`El correo no pudo ser enviado: ${typeof sending === "string" ? sending : "error desconocido"}`, 502);
+        if (sending?.rejected?.length !== 0) {
+          console.warn("El correo no pudo ser enviado (rejected):", sending);
+        }
+      } catch (emailError) {
+        console.warn("Error al enviar el correo:", emailError.message || emailError);
       }
 
       const registerContractor = await db.query(
