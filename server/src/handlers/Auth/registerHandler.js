@@ -17,7 +17,7 @@ export const registerHandler = async (req, res) => {
     res.cookie("PLATFORM_ACCESS_TOKEN", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "none",
       maxAge: 1000 * 60 * 60 * 8,
       path: "/",
     });

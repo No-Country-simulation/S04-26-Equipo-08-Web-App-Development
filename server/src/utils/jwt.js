@@ -15,7 +15,14 @@ export const generateToken = (data, expireTime) => {
 };
 
 export  function authenticateToken(req, res, next) {
-  const token = req.cookies?.PLATFORM_ACCESS_TOKEN;
+  let token = req.cookies?.PLATFORM_ACCESS_TOKEN;
+
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.slice(7);
+    }
+  }
 
   if (token == null) return res.sendStatus(401);
 
