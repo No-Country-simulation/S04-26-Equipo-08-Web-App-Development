@@ -19,7 +19,7 @@ export default function Header() {
     return <PublicHeader />;
   }
 
-  if (isAuthenticated && user?.role === 'admin') {
+  if (isAuthenticated && (user?.role === 'admin' || user?.role === 'operator')) {
     return <AdminHeader />;
   }
 

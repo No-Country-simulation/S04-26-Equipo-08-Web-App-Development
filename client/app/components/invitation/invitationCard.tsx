@@ -1,6 +1,7 @@
 "use client";
 
 import { useInvitation } from "@/hooks/queries/useInvitation";
+import { useRouter } from "next/navigation";
 
 interface Props {
   token: string;
@@ -9,12 +10,23 @@ interface Props {
 export default function InvitationCard({
   token,
 }: Props) {
+  const router = useRouter();
   const {
     data,
     isLoading,
     isError,
     error,
   } = useInvitation(token);
+
+  const email = data?.email;
+  const role = data?.role;
+
+  const handleContinue = () => {
+    const params = new URLSearchParams();
+    if (email) params.set("email", email);
+    if (token) params.set("token", token);
+    router.push(`/contractors/step1?${params.toString()}`);
+  };
 
   if (isLoading) {
     return (
@@ -42,7 +54,7 @@ export default function InvitationCard({
         <div className="flex items-start gap-3">
           <div className="mt-1 h-3 w-3 rounded-full bg-error" />
 
-          <div>
+          <div className="w-full">
             <h2 className="font-semibold text-error">
               Invitación inválida
             </h2>
@@ -56,6 +68,13 @@ export default function InvitationCard({
                 {error.message}
               </p>
             )}
+
+            <button
+              onClick={handleContinue}
+              className="mt-4 w-full rounded-xl bg-primary px-4 py-3 font-medium text-on-primary transition-all hover:opacity-90"
+            >
+              Continuar de todas formas
+            </button>
           </div>
         </div>
       </div>
@@ -81,8 +100,8 @@ export default function InvitationCard({
               <p className="text-xs uppercase tracking-wide text-on-surface-variant">
                 Correo
               </p>
-                      <p className="font-medium text-on-surface">
-                {data?.email}
+              <p className="font-medium text-on-surface">
+                {email}
               </p>
             </div>
 
@@ -92,12 +111,13 @@ export default function InvitationCard({
               </p>
 
               <p className="font-medium text-on-surface">
-                {data?.role}
+                {role}
               </p>
             </div>
           </div>
 
           <button
+            onClick={handleContinue}
             className="mt-6 w-full rounded-xl bg-primary px-4 py-3 font-medium text-on-primary transition-all hover:opacity-90"
           >
             Continuar registro

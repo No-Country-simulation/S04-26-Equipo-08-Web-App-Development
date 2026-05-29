@@ -15,13 +15,6 @@ export default function PublicHeader() {
 
           <a
             className="text-on-surface-variant hover:text-primary transition-colors duration-200"
-            href="/contractors"
-          >
-            Contractors
-          </a>
-
-          <a
-            className="text-on-surface-variant hover:text-primary transition-colors duration-200"
             href="/contact"
           >
             Soporte

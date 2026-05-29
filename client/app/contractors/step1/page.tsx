@@ -1,7 +1,5 @@
-import React from 'react'
+import PersonalInfoStep from "@/app/components/onboarding/personal-info-step";
 
-export default function page() {
-  return (
-    <div>page</div>
-  )
+export default function Step1Page() {
+  return <PersonalInfoStep />;
 }

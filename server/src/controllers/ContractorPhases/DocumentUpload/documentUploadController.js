@@ -8,7 +8,7 @@ export const documentUpload = async (userData, document, docType) => {
   try {
     const { role, id, email } = userData;
     if (role != "contractor") return "You must be a Contractor to do this...";
-    const verifyDocType = ["passport", "id_card", "tax_form", "address_proof"];
+    const verifyDocType = ["passport", "id_card", "tax_form", "address_proof", "certificate", "diploma", "professional_license", "others"];
     
     if (verifyDocType.includes(docType) == false) return "The DocType is invalid.";
     const contractorProfile = await db.query(

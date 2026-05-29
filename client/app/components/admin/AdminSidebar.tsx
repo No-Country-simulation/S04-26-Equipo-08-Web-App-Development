@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Archive,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -11,6 +12,8 @@ import {
   LayoutDashboard,
   LogOut,
   MailCheckIcon,
+  Settings,
+  Shield,
   Users,
 } from "lucide-react";
 
@@ -20,8 +23,8 @@ import { useAuthStore } from "@/app/store/use-auth-store";
 
 export default function AdminSidebar() {
   const router = useRouter()
-  //
-  const logout = useAuthStore((state) => state.logout)
+  const { user, logout } = useAuthStore()
+  const isAdmin = user?.role === "admin";
   
     const handleLogout = () => {
       logout()
@@ -29,16 +32,14 @@ export default function AdminSidebar() {
       router.push('/auth/login')
     }
     //
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
+  const [collapsed, setCollapsed] = useState(false);
 
-    return (
-      localStorage.getItem("admin-sidebar") ===
-      "true"
-    );
-  });
+  useEffect(() => {
+    const stored = localStorage.getItem("admin-sidebar");
+    if (stored === "true") {
+      setCollapsed(true);
+    }
+  }, []);
 
   const toggleSidebar = () => {
     const newValue = !collapsed;
@@ -109,6 +110,14 @@ export default function AdminSidebar() {
             href="/admin/add-contractor"
           />
 
+          {isAdmin && (
+            <SidebarItem
+              icon={Shield}
+              label={collapsed ? "" : "Roles"}
+              href="/admin/roles"
+            />
+          )}
+
           <SidebarItem
             icon={FileText}
             label={
@@ -116,8 +125,7 @@ export default function AdminSidebar() {
                 ? ""
                 : "Aprobaciones"
             }
-            href="/admin/approval
-"
+            href="/admin/approval"
           />
 
           <SidebarItem
@@ -131,6 +139,12 @@ export default function AdminSidebar() {
           />
 
           <SidebarItem
+            icon={BarChart3}
+            label={collapsed ? "" : "Reportes"}
+            href="/admin/reportes"
+          />
+
+          <SidebarItem
             icon={Archive}
             label={collapsed ? "" : "Archivo"}
             href="/admin/archivo"
@@ -140,6 +154,12 @@ export default function AdminSidebar() {
 
       {/* Footer */}
       <div className="space-y-3 border-t border-slate-300 pt-5">
+        <SidebarItem
+          icon={Settings}
+          label={collapsed ? "" : "Configuración"}
+          href="/admin/configuracion"
+        />
+
         <SidebarItem
           icon={HelpCircle}
           label={collapsed ? "" : "Ayuda"}

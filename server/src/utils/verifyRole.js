@@ -1,4 +1,4 @@
-import { db } from "../config/database";
+import { db } from "../config/database.js";
 export const operatorAndAdminOnly = async (id, role) => {
   try {
     const doesExists = await db.query("SELECT id FROM users WHERE id =$1", [id]);

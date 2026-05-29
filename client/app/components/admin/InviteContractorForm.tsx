@@ -1,25 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Phone, Send } from "lucide-react";
+import { Mail, Phone, Send, User } from "lucide-react";
+import { useSendMagicLink } from "@/hooks/queries/useSendMagicLink";
+import { useAuthStore } from "@/app/store/use-auth-store";
 
 export default function InviteContractorForm() {
   const [method, setMethod] = useState<"email" | "whatsapp">("email");
   const [contactInfo, setContactInfo] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [inviteeName, setInviteeName] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const adminUser = useAuthStore((s) => s.user);
+  const { mutate: sendMagicLink, isPending } = useSendMagicLink();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setSuccessMessage("");
+    if (!adminUser?.id) {
+      setErrorMessage("Debes iniciar sesión como administrador.");
+      return;
+    }
 
-    // Simular el tiempo de respuesta del backend por ahora
-    setTimeout(() => {
-      setIsLoading(false);
-      setSuccessMessage("¡Invitación enviada exitosamente!");
-      setContactInfo("");
-    }, 1500);
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    sendMagicLink(
+      {
+        method,
+        receiver: {
+          ...(method === "email" ? { email: contactInfo } : { number: contactInfo }),
+          username: inviteeName,
+        },
+        operatorId: adminUser.id,
+        adminId: adminUser.id,
+      },
+      {
+        onSuccess: () => {
+          setSuccessMessage("¡Invitación enviada exitosamente!");
+          setContactInfo("");
+          setInviteeName("");
+        },
+        onError: () => {
+          setErrorMessage("Error al enviar la invitación. Intenta de nuevo.");
+        },
+      }
+    );
   };
 
   return (
@@ -70,6 +95,25 @@ export default function InviteContractorForm() {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-[var(--on-surface)]">
+              Nombre del contratista
+            </label>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[var(--outline)]">
+                <User size={20} />
+              </div>
+              <input
+                type="text"
+                placeholder="Nombre y apellido"
+                value={inviteeName}
+                onChange={(e) => setInviteeName(e.target.value)}
+                required
+                className="neo-inset w-full rounded-xl py-3 pl-12 pr-4 outline-none transition-all focus:ring-2 focus:ring-[var(--primary)]"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-[var(--on-surface)]">
               {method === "email" ? "Correo Electrónico" : "Número de WhatsApp"}
             </label>
             <div className="relative">
@@ -93,10 +137,10 @@ export default function InviteContractorForm() {
 
           <button
             type="submit"
-            disabled={isLoading || !contactInfo}
+            disabled={isPending || !contactInfo || !inviteeName}
             className="primary-button flex w-full items-center justify-center gap-2 py-3 text-lg font-bold disabled:opacity-50"
           >
-            {isLoading ? (
+            {isPending ? (
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : (
               <>
@@ -109,6 +153,12 @@ export default function InviteContractorForm() {
           {successMessage && (
             <div className="neo-inset mt-4 rounded-xl border-l-4 border-emerald-500 bg-emerald-500/10 p-4 text-emerald-700">
               {successMessage}
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="neo-inset mt-4 rounded-xl border-l-4 border-red-500 bg-red-500/10 p-4 text-red-700">
+              {errorMessage}
             </div>
           )}
         </form>

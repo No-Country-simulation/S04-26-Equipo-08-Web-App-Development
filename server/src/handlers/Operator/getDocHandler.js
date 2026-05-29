@@ -1,7 +1,7 @@
-import { db } from "../../config/database";
-import { getDocuments } from "../../controllers/Operator/getDocuments";
-import { errorResponse, successResponse } from "../../utils/response";
-import { operatorAndAdminOnly } from "../../utils/verifyRole";
+import { db } from "../../config/database.js";
+import { getDocuments } from "../../controllers/Operator/getDocuments.js";
+import { errorResponse, successResponse } from "../../utils/response.js";
+import { operatorAndAdminOnly } from "../../utils/verifyRole.js";
 export const getDocHandler = async (req, res) => {
   try {
     const { id, role } = req.user;

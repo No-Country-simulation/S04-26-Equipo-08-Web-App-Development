@@ -58,7 +58,11 @@ CREATE TYPE document_type AS ENUM (
   'passport',
   'id_card',
   'tax_form',
-  'address_proof'
+  'address_proof',
+  'certificate',
+  'diploma',
+  'professional_license',
+  'others'
 );
 
 CREATE TYPE document_status AS ENUM (
