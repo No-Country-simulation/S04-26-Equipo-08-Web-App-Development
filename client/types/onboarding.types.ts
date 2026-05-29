@@ -116,6 +116,7 @@ export interface OnboardingEvent {
   event_type: string;
   description: string;
   performed_by: string | null;
+  performed_by_email?: string | null;
   created_at: string;
 }
 

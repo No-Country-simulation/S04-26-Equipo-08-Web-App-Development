@@ -34,6 +34,25 @@ export const getOnboardingProgress = async (userId) => {
     [profileId],
   );
 
+  // Infer personal_info completion for users who already filled the form
+  // (backward compat: users who registered before this fix)
+  const personalInfoStep = steps.rows.find((s) => s.step_name === "personal_info");
+  if (personalInfoStep && !personalInfoStep.completed) {
+    const user = await db.query(
+      "SELECT firstname, lastname FROM users WHERE id = $1",
+      [userId],
+    );
+    const hasPersonalData = user.rows[0]?.firstname?.trim() && user.rows[0]?.lastname?.trim();
+    if (hasPersonalData) {
+      await db.query(
+        `UPDATE onboarding_steps SET completed = true, completed_at = NOW()
+         WHERE contractor_profile_id = $1 AND step_name = 'personal_info'`,
+        [profileId],
+      );
+      personalInfoStep.completed = true;
+    }
+  }
+
   return {
     profileExists: true,
     onboardingStatus: profile.rows[0].onboarding_status,

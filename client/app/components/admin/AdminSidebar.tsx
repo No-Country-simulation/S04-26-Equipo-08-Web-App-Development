@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 import {
   Archive,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -11,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   MailCheckIcon,
+  Settings,
   Shield,
   Users,
 } from "lucide-react";
@@ -137,6 +139,12 @@ export default function AdminSidebar() {
           />
 
           <SidebarItem
+            icon={BarChart3}
+            label={collapsed ? "" : "Reportes"}
+            href="/admin/reportes"
+          />
+
+          <SidebarItem
             icon={Archive}
             label={collapsed ? "" : "Archivo"}
             href="/admin/archivo"
@@ -146,6 +154,12 @@ export default function AdminSidebar() {
 
       {/* Footer */}
       <div className="space-y-3 border-t border-slate-300 pt-5">
+        <SidebarItem
+          icon={Settings}
+          label={collapsed ? "" : "Configuración"}
+          href="/admin/configuracion"
+        />
+
         <SidebarItem
           icon={HelpCircle}
           label={collapsed ? "" : "Ayuda"}

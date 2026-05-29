@@ -32,8 +32,10 @@ export const contractors: Contractor[] = [
         label: "Documentos",
         status: "approved",
         data: {
-          idFile: { name: "passport_marcus.pdf", url: "#" },
-          taxFile: { name: "w9_marcus_thorne.pdf", url: "#" },
+          files: [
+            { name: "passport_marcus.pdf", url: "#", type: "passport", status: "approved" },
+            { name: "w9_marcus_thorne.pdf", url: "#", type: "tax_form", status: "approved" },
+          ],
         },
       },
       {
@@ -43,7 +45,8 @@ export const contractors: Contractor[] = [
         data: {
           documentId: "SP-2024-0812-B",
           signedAt: "2024-10-24T14:30:00Z",
-          signatureImage: "/signature-marcus.png",
+          signed: true,
+          contractUrl: "#",
         },
       },
       {
@@ -100,8 +103,10 @@ export const contractors: Contractor[] = [
         label: "Documentos",
         status: "approved",
         data: {
-          idFile: { name: "id_card_sarah.pdf", url: "#" },
-          taxFile: { name: "w8ben_sarah.pdf", url: "#" },
+          files: [
+            { name: "id_card_sarah.pdf", url: "#", type: "id_card", status: "approved" },
+            { name: "w8ben_sarah.pdf", url: "#", type: "tax_form", status: "approved" },
+          ],
         },
       },
       {
@@ -111,7 +116,8 @@ export const contractors: Contractor[] = [
         data: {
           documentId: "SP-2024-0811-A",
           signedAt: "2024-10-23T10:00:00Z",
-          signatureImage: "/signature-sarah.png",
+          signed: true,
+          contractUrl: "#",
         },
       },
       {
@@ -168,8 +174,10 @@ export const contractors: Contractor[] = [
         label: "Documentos",
         status: "approved",
         data: {
-          idFile: { name: "ine_carlos.pdf", url: "#" },
-          taxFile: { name: "w8ben_carlos.pdf", url: "#" },
+          files: [
+            { name: "ine_carlos.pdf", url: "#", type: "id_card", status: "approved" },
+            { name: "w8ben_carlos.pdf", url: "#", type: "tax_form", status: "approved" },
+          ],
         },
       },
       {
@@ -179,7 +187,8 @@ export const contractors: Contractor[] = [
         data: {
           documentId: "SP-2024-0813-C",
           signedAt: "2024-10-25T16:45:00Z",
-          signatureImage: "/signature-carlos.png",
+          signed: true,
+          contractUrl: "#",
         },
       },
       {
@@ -236,8 +245,9 @@ export const contractors: Contractor[] = [
         label: "Documentos",
         status: "in_progress",
         data: {
-          idFile: { name: "cedula_ana.pdf", url: "#" },
-          taxFile: { name: "", url: "" },
+          files: [
+            { name: "cedula_ana.pdf", url: "#", type: "id_card", status: "pending" },
+          ],
         },
       },
       {
@@ -288,8 +298,10 @@ export const contractors: Contractor[] = [
         label: "Documentos",
         status: "approved",
         data: {
-          idFile: { name: "passport_james.pdf", url: "#" },
-          taxFile: { name: "w8ben_james.pdf", url: "#" },
+          files: [
+            { name: "passport_james.pdf", url: "#", type: "passport", status: "approved" },
+            { name: "w8ben_james.pdf", url: "#", type: "tax_form", status: "approved" },
+          ],
         },
       },
       {
@@ -299,7 +311,8 @@ export const contractors: Contractor[] = [
         data: {
           documentId: "SP-2024-0810-D",
           signedAt: "2024-10-21T09:15:00Z",
-          signatureImage: "/signature-james.png",
+          signed: true,
+          contractUrl: "#",
         },
       },
       {

@@ -34,12 +34,18 @@ export const register = async (data) => {
     [email],
   );
 
+  let userId;
+
   if (emailExists.rows.length > 0) {
+    userId = emailExists.rows[0].id;
     const { rows } = await db.query(
       `UPDATE users SET password = $1, firstname = $2, lastname = $3, phone = $4, role = $5, updated_at = NOW() WHERE email = $6 RETURNING *`,
       [hashPass, firstname, lastname, phone, role, email],
     );
     if (rows.length == 1) {
+      if (role === "contractor") {
+        await markPersonalInfoStep(userId);
+      }
       return { ...rows[0], password: "" };
     }
     return "Something went wrong updating the user.";
@@ -51,7 +57,49 @@ export const register = async (data) => {
   );
 
   if (rows.length == 1) {
+    userId = rows[0].id;
+    if (role === "contractor") {
+      await markPersonalInfoStep(userId);
+    }
     return { ...rows[0], password: "" };
   }
   return "There's something wrong with the rows.";
 };
+
+async function markPersonalInfoStep(userId) {
+  let profileId;
+  const existing = await db.query(
+    "SELECT id FROM contractor_profiles WHERE user_id = $1",
+    [userId],
+  );
+  if (existing.rows.length > 0) {
+    profileId = existing.rows[0].id;
+  } else {
+    const profile = await db.query(
+      `INSERT INTO contractor_profiles (user_id, onboarding_status)
+       VALUES ($1, 'IN_PROGRESS') RETURNING id`,
+      [userId],
+    );
+    profileId = profile.rows[0].id;
+  }
+
+  const stepExists = await db.query(
+    `SELECT id FROM onboarding_steps
+     WHERE contractor_profile_id = $1 AND step_name = 'personal_info'`,
+    [profileId],
+  );
+
+  if (stepExists.rows.length > 0) {
+    await db.query(
+      `UPDATE onboarding_steps SET completed = true, completed_at = NOW()
+       WHERE contractor_profile_id = $1 AND step_name = 'personal_info'`,
+      [profileId],
+    );
+  } else {
+    await db.query(
+      `INSERT INTO onboarding_steps (contractor_profile_id, step_name, completed, completed_at)
+       VALUES ($1, 'personal_info', true, NOW())`,
+      [profileId],
+    );
+  }
+}

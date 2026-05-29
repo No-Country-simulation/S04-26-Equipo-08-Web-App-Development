@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useOnboardingStore, STEPS, STEP_LABELS, type StepName } from "@/app/store/use-onboarding-store";
 import { useOnboardingProgress } from "@/hooks/queries/useOnboardingProgress";
@@ -10,34 +10,48 @@ const STEP_ROUTES = [
   "/contractors/step2",
   "/contractors/step3",
   "/contractors/step4",
+  "/contractors/step5",
 ];
 
 export default function OnboardingStatus() {
   const router = useRouter();
   const { currentStep, completedSteps, setCurrentStep, completeStep } = useOnboardingStore();
   const { data: progress } = useOnboardingProgress();
+  const synced = useRef(false);
 
   const progressPercent = Math.round((completedSteps.length / STEPS.length) * 100);
 
   useEffect(() => {
     if (!progress?.steps || progress.steps.length === 0) return;
-    if (completedSteps.length > 0) return;
+    if (synced.current) return;
+    synced.current = true;
 
-    const backendCompleted = progress.steps.filter((s) => s.completed).map((s) => s.step_name as StepName);
+    const store = useOnboardingStore.getState();
+    const backendCompleted = progress.steps
+      .filter((s) => s.completed)
+      .map((s) => s.step_name as StepName);
     const backendStepNames = progress.steps.map((s) => s.step_name);
 
-    if (backendCompleted.length > 0) {
-      const firstIncompleteIndex = backendStepNames.findIndex(
-        (name) => !backendCompleted.includes(name as StepName),
-      );
-      const stepIndex = firstIncompleteIndex >= 0 ? firstIncompleteIndex : backendStepNames.length - 1;
+    const firstIncompleteIndex = backendStepNames.findIndex(
+      (name) => !backendCompleted.includes(name as StepName),
+    );
+    const stepIndex = firstIncompleteIndex >= 0 ? firstIncompleteIndex : backendStepNames.length - 1;
 
-      for (const step of backendCompleted) {
-        completeStep(step);
+    for (const step of backendCompleted) {
+      if (!store.completedSteps.includes(step)) {
+        store.completeStep(step);
       }
-      setCurrentStep(stepIndex);
     }
-  }, [progress, completedSteps.length, completeStep, setCurrentStep]);
+
+    if (store.currentStep !== stepIndex) {
+      store.setCurrentStep(stepIndex);
+    }
+
+    // Auto-redirect to current step if not all completed
+    if (backendCompleted.length < STEPS.length) {
+      router.replace(STEP_ROUTES[stepIndex]);
+    }
+  }, [progress]);
 
   const currentStepName = STEPS[currentStep];
   const isAllCompleted = completedSteps.length >= STEPS.length;

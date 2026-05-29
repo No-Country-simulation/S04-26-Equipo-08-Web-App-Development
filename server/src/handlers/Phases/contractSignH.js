@@ -6,9 +6,9 @@ export const contractSignHandler = async (req, res) => {
     const answer = await contractSign(req.user, req.body);
     return answer?.embedSrc
       ? successResponse(res, answer, "Documento de firma creado", 201)
-      : errorResponse(res, answer?.message || answer, 400);
+      : errorResponse(res, answer?.message || "No se pudo iniciar la firma", 400);
   } catch (error) {
-    console.error("ContractSign Handler Error:", error);
-    throw new Error(error?.message);
+    console.error("ContractSign Handler Error:", error?.message || error);
+    return errorResponse(res, error?.message || "Error al iniciar la firma del contrato", 500);
   }
 };

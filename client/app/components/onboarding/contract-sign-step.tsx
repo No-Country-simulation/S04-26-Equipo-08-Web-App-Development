@@ -4,27 +4,15 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useOnboardingStore, STEPS } from "@/app/store/use-onboarding-store";
 import { useContractSign, useContractComplete } from "@/hooks/queries/useContractSign";
+import { useAppToast } from "@/app/providers/ToastProvider";
 import { Loader2, FileText, ArrowLeft, ExternalLink } from "lucide-react";
-
-function showToast(msg: string, type: "success" | "error" = "success") {
-  const el = document.createElement("div");
-  el.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${
-    type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
-  }`;
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
-}
-const toast = {
-  success: (msg: string) => showToast(msg, "success"),
-  error: (msg: string) => showToast(msg, "error"),
-};
 
 export default function ContractSignStep() {
   const router = useRouter();
   const { currentStep, nextStep } = useOnboardingStore();
   const contractSign = useContractSign();
   const contractComplete = useContractComplete();
+  const { showToast } = useAppToast();
   const [embedSrc, setEmbedSrc] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
@@ -48,7 +36,7 @@ export default function ContractSignStep() {
       const result = await contractSign.mutateAsync();
       setEmbedSrc(result.embedSrc);
     } catch {
-      toast.error("Error al iniciar la firma del contrato");
+      showToast("Error al iniciar la firma del contrato", undefined, "error");
     }
   }, [contractSign]);
 
@@ -170,6 +158,7 @@ export default function ContractSignStep() {
 
           {embedSrc && scriptLoaded && (
             <div className="w-full min-h-[600px] rounded-xl overflow-hidden">
+              {/* @ts-expect-error - docuseal-form is a web component loaded from CDN */}
               <docuseal-form
                 data-src={embedSrc}
                 data-language="es"

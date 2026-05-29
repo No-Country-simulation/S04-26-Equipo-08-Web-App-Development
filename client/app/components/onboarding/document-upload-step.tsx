@@ -5,21 +5,8 @@ import { useRouter } from "next/navigation";
 import { useOnboardingStore, STEPS, STEP_LABELS } from "@/app/store/use-onboarding-store";
 import { useDocumentUpload } from "@/hooks/queries/useDocumentUpload";
 import { DOC_TYPE_LABELS, type DocType } from "@/services/document.service";
+import { useAppToast } from "@/app/providers/ToastProvider";
 import { CheckCircle, XCircle, Loader2, Upload, Trash2 } from "lucide-react";
-
-function showToast(msg: string, type: "success" | "error" = "success") {
-  const el = document.createElement("div");
-  el.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${
-    type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
-  }`;
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
-}
-const toast = {
-  success: (msg: string) => showToast(msg, "success"),
-  error: (msg: string) => showToast(msg, "error"),
-};
 
 interface UploadEntry {
   id: string;
@@ -34,6 +21,7 @@ const DOC_TYPES = Object.entries(DOC_TYPE_LABELS) as [DocType, string][];
 export default function DocumentUploadStep() {
   const router = useRouter();
   const { currentStep, completedSteps, nextStep } = useOnboardingStore();
+  const { showToast } = useAppToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploads, setUploads] = useState<UploadEntry[]>([]);
   const [selectedDocType, setSelectedDocType] = useState<DocType>("id_card");
@@ -71,7 +59,7 @@ export default function DocumentUploadStep() {
       setUploads((prev) =>
         prev.map((u) => (u.id === entryId ? { ...u, status: "success" as const } : u)),
       );
-      toast.success(`${DOC_TYPE_LABELS[entry.docType]} subido correctamente`);
+      showToast(`${DOC_TYPE_LABELS[entry.docType]} subido correctamente`, undefined, "success");
     } catch (err) {
       setUploads((prev) =>
         prev.map((u) =>
@@ -80,7 +68,7 @@ export default function DocumentUploadStep() {
             : u,
         ),
       );
-      toast.error(`Error al subir ${DOC_TYPE_LABELS[entry.docType]}`);
+      showToast(`Error al subir ${DOC_TYPE_LABELS[entry.docType]}`, undefined, "error");
     }
   };
 

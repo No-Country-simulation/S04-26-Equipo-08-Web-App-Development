@@ -1,6 +1,7 @@
 import { apiFetch } from "./api";
 import type { BackendUser } from "@/types/onboarding.types";
 import type { OnboardingProgress } from "./onboarding.service";
+import type { ContractorDetail } from "@/types/admin";
 
 export async function getUsers() {
   return apiFetch<BackendUser[]>("/users");
@@ -51,4 +52,21 @@ export async function updateUser(
 
 export async function getContractorProgress(id: string) {
   return apiFetch<OnboardingProgress>(`/onboarding/progress/${id}`);
+}
+
+export async function getContractorDetail(id: string) {
+  return apiFetch<ContractorDetail>(`/onboarding/detail/${id}`);
+}
+
+export async function reviewStep(
+  profileId: string,
+  stepName: string,
+  action: "approve" | "reject" | "reset",
+  notes?: string,
+) {
+  return apiFetch<{ message: string }>("/onboarding/steps/review", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profileId, stepName, action, notes }),
+  });
 }

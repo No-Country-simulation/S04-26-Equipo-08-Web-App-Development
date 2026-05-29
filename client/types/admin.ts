@@ -1,4 +1,4 @@
-import type { StepName } from "./onboarding.types";
+import type { StepName, ContractorProfile, Document, Contract, PaymentMethod, IdentityVerification, OnboardingEvent, BackendUser } from "./onboarding.types";
 
 export interface PersonalInfoData {
   firstname: string;
@@ -14,14 +14,14 @@ export interface PersonalInfoData {
 }
 
 export interface DocumentData {
-  idFile: { name: string; url: string };
-  taxFile: { name: string; url: string };
+  files: { name: string; url: string; type: string; status: string }[];
 }
 
 export interface ContractData {
   documentId: string;
-  signedAt: string;
-  signatureImage: string;
+  signedAt: string | null;
+  signed: boolean;
+  contractUrl: string | null;
 }
 
 export interface PaymentData {
@@ -53,4 +53,16 @@ export interface Contractor {
   created_at: string;
   is_active: boolean;
   steps: ContractorStep[];
+}
+
+export interface ContractorDetail {
+  exists: boolean;
+  user: BackendUser;
+  profile: ContractorProfile | null;
+  steps: { step_name: string; completed: boolean; completed_at: string | null; notes: string | null }[];
+  documents: Document[];
+  contracts: Contract[];
+  paymentMethods: PaymentMethod[];
+  identityVerifications: IdentityVerification[];
+  onboardingEvents: OnboardingEvent[];
 }

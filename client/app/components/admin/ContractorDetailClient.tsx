@@ -11,10 +11,10 @@ import {
   ChevronRight,
   FileText,
   Download,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
-import { useUser } from "@/hooks/queries/useUsers";
-import { useContractorProgress } from "@/hooks/queries/useContractorProgress";
-import type { BackendUser } from "@/types/onboarding.types";
+import { useContractorDetail, useReviewStep } from "@/hooks/queries/useContractorDetail";
 import type {
   ContractorStep,
   PersonalInfoData,
@@ -22,11 +22,24 @@ import type {
   ContractData,
   PaymentData,
   IdentityData,
+  ContractorDetail,
 } from "@/types/admin";
+import { useAppToast } from "@/app/providers/ToastProvider";
 
 interface Props {
   id: string;
 }
+
+const DOC_TYPE_LABELS: Record<string, string> = {
+  id_card: "Cédula",
+  passport: "Pasaporte",
+  tax_form: "Formulario fiscal",
+  address_proof: "Comprobante de domicilio",
+  certificate: "Certificado",
+  diploma: "Título",
+  professional_license: "Licencia profesional",
+  others: "Otros",
+};
 
 function PersonalInfoPreview({ data }: { data: PersonalInfoData }) {
   const fields = [
@@ -45,7 +58,7 @@ function PersonalInfoPreview({ data }: { data: PersonalInfoData }) {
       {fields.map((f) => (
         <div key={f.label}>
           <p className="text-xs text-slate-400 uppercase">{f.label}</p>
-          <p className="font-medium text-slate-700">{f.value}</p>
+          <p className="font-medium text-slate-700">{f.value || "—"}</p>
         </div>
       ))}
     </div>
@@ -53,29 +66,43 @@ function PersonalInfoPreview({ data }: { data: PersonalInfoData }) {
 }
 
 function DocumentPreview({ data }: { data: DocumentData }) {
-  const files = [
-    { label: "Identificación", file: data.idFile, icon: "\u{1FAAA}" },
-    { label: "Documentación fiscal", file: data.taxFile, icon: "\u{1F4C4}" },
-  ];
+  if (!data.files || data.files.length === 0) {
+    return <p className="text-sm text-slate-400 italic">No hay documentos subidos.</p>;
+  }
+
+  const statusBadge = (status: string) => {
+    switch (status) {
+      case "approved": return <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">Aprobado</span>;
+      case "rejected": return <span className="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Rechazado</span>;
+      default: return <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Pendiente</span>;
+    }
+  };
+
   return (
-    <div className="space-y-3">
-      {files.map((f) => (
-        <div key={f.label} className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">{f.icon}</span>
-            <div>
-              <p className="text-sm font-medium text-slate-700">{f.label}</p>
-              <p className="text-xs text-slate-400">
-                {f.file.name || "No subido aun"}
-              </p>
+    <div className="space-y-2">
+      {data.files.map((f, i) => (
+        <div key={i} className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm">
+          <div className="flex items-center gap-3 min-w-0">
+            <FileText size={18} className="text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-slate-700 truncate">{f.name}</p>
+              <p className="text-xs text-slate-400">{DOC_TYPE_LABELS[f.type] || f.type}</p>
             </div>
           </div>
-          {f.file.name && (
-            <button className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors">
-              <Download size={14} />
-              Ver
-            </button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {statusBadge(f.status)}
+            {f.url && (
+              <a
+                href={f.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+              >
+                <ExternalLink size={14} />
+                Ver
+              </a>
+            )}
+          </div>
         </div>
       ))}
     </div>
@@ -87,22 +114,35 @@ function ContractPreview({ data }: { data: ContractData }) {
     <div className="space-y-3 text-sm">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-xs text-slate-400 uppercase">ID del contrato</p>
-          <p className="font-medium text-slate-700">{data.documentId}</p>
-        </div>
-        <div>
-          <p className="text-xs text-slate-400 uppercase">Fecha de firma</p>
-          <p className="font-medium text-slate-700">
-            {new Date(data.signedAt).toLocaleDateString("es-ES", {
-              dateStyle: "long",
-            })}
+          <p className="text-xs text-slate-400 uppercase">Estado</p>
+          <p className={`font-medium ${data.signed ? "text-green-600" : "text-slate-500"}`}>
+            {data.signed ? "Firmado" : "Pendiente de firma"}
           </p>
         </div>
+        {data.signedAt && (
+          <div>
+            <p className="text-xs text-slate-400 uppercase">Fecha de firma</p>
+            <p className="font-medium text-slate-700">
+              {new Date(data.signedAt).toLocaleDateString("es-ES", { dateStyle: "long" })}
+            </p>
+          </div>
+        )}
       </div>
-      <div className="flex items-center gap-2 rounded-lg bg-white p-3 shadow-sm">
-        <FileText size={18} className="text-primary" />
-        <span className="text-sm text-slate-600">Contrato firmado digitalmente</span>
-      </div>
+      {data.contractUrl && (
+        <a
+          href={data.contractUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-lg bg-white p-3 shadow-sm hover:bg-slate-50 transition-colors"
+        >
+          <FileText size={18} className="text-primary" />
+          <span className="text-sm text-slate-600 flex-1">Ver contrato</span>
+          <ExternalLink size={14} className="text-slate-400" />
+        </a>
+      )}
+      {!data.signed && !data.contractUrl && (
+        <p className="text-sm text-slate-400 italic">El contratista aún no ha iniciado la firma.</p>
+      )}
     </div>
   );
 }
@@ -113,49 +153,51 @@ function PaymentPreview({ data }: { data: PaymentData }) {
     crypto: "Criptomonedas",
     cash: "Efectivo",
   };
+  if (!data.methodType) {
+    return <p className="text-sm text-slate-400 italic">El contratista aún no ha configurado método de pago.</p>;
+  }
   return (
     <div className="grid grid-cols-2 gap-3 text-sm">
       <div>
-        <p className="text-xs text-slate-400 uppercase">Metodo</p>
+        <p className="text-xs text-slate-400 uppercase">Método</p>
         <p className="font-medium text-slate-700">{methodLabels[data.methodType] || data.methodType}</p>
       </div>
       <div>
         <p className="text-xs text-slate-400 uppercase">Titular</p>
-        <p className="font-medium text-slate-700">{data.accountHolder}</p>
+        <p className="font-medium text-slate-700">{data.accountHolder || "—"}</p>
       </div>
       <div>
         <p className="text-xs text-slate-400 uppercase">Cuenta</p>
-        <p className="font-medium text-slate-700">{data.accountNumber}</p>
+        <p className="font-medium text-slate-700">{data.accountNumber || "—"}</p>
       </div>
       <div>
         <p className="text-xs text-slate-400 uppercase">Banco</p>
-        <p className="font-medium text-slate-700">{data.bankName}</p>
+        <p className="font-medium text-slate-700">{data.bankName || "—"}</p>
       </div>
     </div>
   );
 }
 
 function IdentityPreview({ data }: { data: IdentityData }) {
+  if (!data.status) {
+    return <p className="text-sm text-slate-400 italic">El contratista aún no ha completado verificación.</p>;
+  }
   return (
     <div className="space-y-3 text-sm">
       <div className="grid grid-cols-2 gap-3">
         <div>
           <p className="text-xs text-slate-400 uppercase">Estado</p>
-          <p className="font-medium text-slate-700">
-            {data.status === "verified"
-              ? "Verificado"
-              : data.status === "failed"
-              ? "Fallo"
-              : "Pendiente"}
+          <p className={`font-medium ${
+            data.status === "verified" ? "text-green-600" : data.status === "failed" ? "text-red-600" : "text-slate-500"
+          }`}>
+            {data.status === "verified" ? "Verificado" : data.status === "failed" ? "Falló" : "Pendiente"}
           </p>
         </div>
         {data.verifiedAt && (
           <div>
             <p className="text-xs text-slate-400 uppercase">Verificado el</p>
             <p className="font-medium text-slate-700">
-              {new Date(data.verifiedAt).toLocaleDateString("es-ES", {
-                dateStyle: "long",
-              })}
+              {new Date(data.verifiedAt).toLocaleDateString("es-ES", { dateStyle: "long" })}
             </p>
           </div>
         )}
@@ -170,86 +212,153 @@ function IdentityPreview({ data }: { data: IdentityData }) {
   );
 }
 
-function buildSteps(user: BackendUser, stepsFromDb?: { step_name: string; completed: boolean }[]): ContractorStep[] {
-  const name = `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || user.email;
-
-  const statusMap: Record<string, string> = {};
-  if (stepsFromDb) {
-    for (const s of stepsFromDb) {
-      statusMap[s.step_name] = s.completed ? "completed" : "pending";
-    }
-  }
-
-  const mockPersonalInfo: PersonalInfoData = {
-    firstname: user.firstname ?? "",
-    lastname: user.lastname ?? "",
-    email: user.email,
-    phone: user.phone ?? "",
-    birthDate: "1990-01-15",
-    country: "No especificado",
-    city: "No especificado",
-    address: "No especificado",
-    documentType: "passport",
-    documentNumber: "PEND-001",
-  };
-  const mockDoc: DocumentData = {
-    idFile: { name: "identificacion_pendiente.pdf", url: "#" },
-    taxFile: { name: "documento_fiscal_pendiente.pdf", url: "#" },
-  };
-  const mockContract: ContractData = {
-    documentId: "SP-" + Date.now().toString(36),
-    signedAt: new Date().toISOString(),
-    signatureImage: "/signature-placeholder.png",
-  };
-  const mockPayment: PaymentData = {
-    methodType: "bank_transfer",
-    accountHolder: name,
-    accountNumber: "****0000",
-    bankName: "Por confirmar",
-  };
-  const mockIdentity: IdentityData = {
-    status: "pending",
-    verifiedAt: null,
-    notes: "Pendiente de verificacion",
-  };
-
-  const steps: { step: ContractorStep["step"]; label: string; data: unknown }[] = [
-    { step: "personal_info", label: "Datos personales", data: mockPersonalInfo },
-    { step: "document_upload", label: "Documentos", data: mockDoc },
-    { step: "contract_sign", label: "Firma de contrato", data: mockContract },
-    { step: "payment_setup", label: "Metodo de pago", data: mockPayment },
-    { step: "identity_verification", label: "Verificacion de identidad", data: mockIdentity },
-  ];
-
-  return steps.map((s) => ({
-    ...s,
-    status: statusMap[s.step] || "pending",
-    data: s.data as ContractorStep["data"],
-  })) as ContractorStep[];
-}
-
 export default function ContractorDetailClient({ id }: Props) {
-  const { data: user, isLoading, error } = useUser(id);
-  const { data: progress } = useContractorProgress(id);
+  const { data: detail, isLoading, error } = useContractorDetail(id);
+  const reviewMutation = useReviewStep(id);
+  const { showToast } = useAppToast();
   const [expandedStep, setExpandedStep] = useState<number | null>(0);
+  const [reviewingStep, setReviewingStep] = useState<string | null>(null);
 
-  const [steps, setSteps] = useState<ContractorStep[] | null>(null);
+  const resolvedSteps = useMemo<ContractorStep[] | null>(() => {
+    if (!detail) return null;
 
-  const resolvedSteps = useMemo(() => {
-    if (steps) return steps;
-    if (!user) return null;
-    return buildSteps(user, progress?.steps);
-  }, [user, progress, steps]);
+    const statusMap: Record<string, string> = {};
+    if (detail.steps) {
+      for (const s of detail.steps) {
+        statusMap[s.step_name] = s.completed ? "completed" : "pending";
+      }
+    }
+
+    const user = detail.user;
+    const profile = detail.profile;
+    const name = `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || user.email;
+
+    const personalInfo: PersonalInfoData = {
+      firstname: user.firstname ?? "",
+      lastname: user.lastname ?? "",
+      email: user.email,
+      phone: user.phone ?? "",
+      birthDate: profile?.birth_date
+        ? new Date(profile.birth_date).toLocaleDateString("es-ES")
+        : "",
+      country: profile?.country ?? "",
+      city: profile?.city ?? "",
+      address: profile?.address ?? "",
+      documentType: profile?.document_type ?? "",
+      documentNumber: profile?.document_number ?? "",
+    };
+
+    const docFiles = detail.documents.map((d) => ({
+      name: d.file_url?.split("/").pop() || d.file_url,
+      url: d.file_url,
+      type: d.document_type,
+      status: d.status,
+    }));
+    const documents: DocumentData = { files: docFiles };
+
+    const contractRow = detail.contracts[0];
+    const contract: ContractData = {
+      documentId: contractRow?.id ?? "",
+      signedAt: contractRow?.signed_at ?? null,
+      signed: contractRow?.signed ?? false,
+      contractUrl: contractRow?.contract_url ?? null,
+    };
+
+    const payment = detail.paymentMethods[0];
+    const paymentData: PaymentData = {
+      methodType: payment?.method_type ?? "",
+      accountHolder: payment?.account_holder ?? "",
+      accountNumber: payment?.account_number ?? "",
+      bankName: payment?.bank_name ?? "",
+    };
+
+    const identity = detail.identityVerifications[0];
+    const identityData: IdentityData = {
+      status: identity?.status ?? "",
+      verifiedAt: identity?.verified_at ?? null,
+      notes: identity?.verification_notes ?? "",
+    };
+
+    const steps: { step: ContractorStep["step"]; label: string; data: unknown }[] = [
+      { step: "personal_info", label: "Datos personales", data: personalInfo },
+      { step: "document_upload", label: "Documentos", data: documents },
+      { step: "contract_sign", label: "Firma de contrato", data: contract },
+      { step: "payment_setup", label: "Método de pago", data: paymentData },
+      { step: "identity_verification", label: "Verificación de identidad", data: identityData },
+    ];
+
+    return steps.map((s) => ({
+      ...s,
+      status: (statusMap[s.step] || "pending") as ContractorStep["status"],
+      data: s.data as ContractorStep["data"],
+    })) as ContractorStep[];
+  }, [detail]);
+
+  const handleApprove = async (stepIndex: number) => {
+    if (!detail?.profile || !resolvedSteps) return;
+    const stepName = resolvedSteps[stepIndex].step;
+    setReviewingStep(stepName);
+    try {
+      await reviewMutation.mutateAsync({
+        profileId: detail.profile.id,
+        stepName,
+        action: "approve",
+      });
+      showToast(`Paso "${resolvedSteps[stepIndex].label}" aprobado`, undefined, "success");
+    } catch {
+      showToast("Error al aprobar el paso", undefined, "error");
+    } finally {
+      setReviewingStep(null);
+    }
+  };
+
+  const handleReject = async (stepIndex: number) => {
+    if (!detail?.profile || !resolvedSteps) return;
+    const stepName = resolvedSteps[stepIndex].step;
+    setReviewingStep(stepName);
+    try {
+      await reviewMutation.mutateAsync({
+        profileId: detail.profile.id,
+        stepName,
+        action: "reject",
+        notes: "Rechazado por el operador",
+      });
+      showToast(`Paso "${resolvedSteps[stepIndex].label}" rechazado`, undefined, "error");
+    } catch {
+      showToast("Error al rechazar el paso", undefined, "error");
+    } finally {
+      setReviewingStep(null);
+    }
+  };
+
+  const handleRevertToPending = async (stepIndex: number) => {
+    if (!detail?.profile || !resolvedSteps) return;
+    const stepName = resolvedSteps[stepIndex].step;
+    setReviewingStep(stepName);
+    try {
+      await reviewMutation.mutateAsync({
+        profileId: detail.profile.id,
+        stepName,
+        action: "reset",
+      });
+      showToast(`Paso "${resolvedSteps[stepIndex].label}" revertido a pendiente`, undefined, "success");
+    } catch {
+      showToast("Error al revertir el paso", undefined, "error");
+    } finally {
+      setReviewingStep(null);
+    }
+  };
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl bg-[#e8eaf0] p-8 shadow-xl">
+      <div className="rounded-3xl bg-[#e8eaf0] p-8 shadow-xl flex items-center justify-center gap-3">
+        <Loader2 size={20} className="animate-spin text-primary" />
         <p className="text-slate-500">Cargando contratista...</p>
       </div>
     );
   }
 
-  if (error || !user) {
+  if (error || !detail?.exists) {
     return (
       <div>
         <Link
@@ -266,36 +375,9 @@ export default function ContractorDetailClient({ id }: Props) {
     );
   }
 
+  const user = detail.user;
+  const profile = detail.profile;
   const name = `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || user.email;
-
-  const handleApprove = (stepIndex: number) => {
-    setSteps((prev) => {
-      const current = prev ?? buildSteps(user, progress?.steps);
-      const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: "approved" as const } : s));
-      return copy;
-    });
-  };
-
-  const handleReject = (stepIndex: number) => {
-    setSteps((prev) => {
-      const current = prev ?? buildSteps(user, progress?.steps);
-      const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: "rejected" as const } : s));
-      return copy;
-    });
-  };
-
-  const handleRevertToPending = (stepIndex: number) => {
-    setSteps((prev) => {
-      const current = prev ?? buildSteps(user, progress?.steps);
-      const wasCompleted = progress?.steps?.find((s) => s.step_name === current[stepIndex]?.step)?.completed;
-      const copy = current.map((s, i) => (i === stepIndex ? { ...s, status: (wasCompleted ? "completed" : "pending") as const } : s));
-      return copy;
-    });
-  };
-
-  const approvedCount = (resolvedSteps ?? []).filter(
-    (s) => s.status === "approved"
-  ).length;
 
   const statusBadge = (status: string) => {
     switch (status) {
@@ -318,7 +400,7 @@ export default function ContractorDetailClient({ id }: Props) {
     if (!step.data) {
       return (
         <p className="text-sm text-slate-400 italic">
-          El contratista aun no ha enviado esta informacion.
+          El contratista aún no ha enviado esta información.
         </p>
       );
     }
@@ -337,6 +419,8 @@ export default function ContractorDetailClient({ id }: Props) {
         return null;
     }
   };
+
+  const steps = resolvedSteps ?? [];
 
   return (
     <div>
@@ -366,19 +450,17 @@ export default function ContractorDetailClient({ id }: Props) {
             </div>
             <div className="grid grid-cols-3 gap-6 mt-6">
               <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold">Rol</p>
-                <p className="font-medium capitalize">{user.role}</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Estado</p>
+                <p className="font-medium capitalize">{profile?.onboarding_status || "Sin perfil"}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold">Telefono</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Teléfono</p>
                 <p className="font-medium">{user.phone || "No registrado"}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase font-semibold">Registro</p>
                 <p className="font-medium">
-                  {new Date(user.created_at).toLocaleDateString("es-ES", {
-                    dateStyle: "long",
-                  })}
+                  {new Date(user.created_at).toLocaleDateString("es-ES", { dateStyle: "long" })}
                 </p>
               </div>
             </div>
@@ -387,22 +469,19 @@ export default function ContractorDetailClient({ id }: Props) {
       </div>
 
       {/* Steps */}
-      <div className="rounded-3xl bg-[#e8eaf0] p-8 shadow-xl">
+      <div className="rounded-3xl bg-[#e8eaf0] p-8 shadow-xl mb-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Pasos de Onboarding</h2>
           <span className="text-sm text-slate-500">
-            {approvedCount} de {resolvedSteps?.length ?? 0} aprobados
+            {steps.filter((s) => s.status === "approved" || s.status === "completed").length} de {steps.length} completados
           </span>
         </div>
 
-        <p className="text-xs text-slate-400 mb-4 italic">
-          * El estado de cada paso refleja el progreso real. Los datos de detalle son de demostracion.
-        </p>
-
         <div className="space-y-3">
-          {(resolvedSteps ?? []).map((step, index) => {
+          {steps.map((step, index) => {
             const isExpanded = expandedStep === index;
             const badge = statusBadge(step.status);
+            const isReviewing = reviewingStep === step.step;
 
             return (
               <div
@@ -441,35 +520,38 @@ export default function ContractorDetailClient({ id }: Props) {
                       <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
                         <button
                           onClick={() => handleApprove(index)}
+                          disabled={isReviewing}
                           className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                             step.status === "approved"
                               ? "bg-green-500 text-white cursor-default"
-                              : "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50"
                           }`}
                         >
-                          <CheckCircle size={16} />
+                          {isReviewing ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                           Aprobar
                         </button>
                         <button
                           onClick={() => handleRevertToPending(index)}
+                          disabled={isReviewing}
                           className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                             step.status === "pending" || step.status === "completed"
                               ? "bg-slate-400 text-white cursor-default"
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50"
                           }`}
                         >
-                          <Clock size={16} />
+                          {isReviewing ? <Loader2 size={16} className="animate-spin" /> : <Clock size={16} />}
                           Revertir
                         </button>
                         <button
                           onClick={() => handleReject(index)}
+                          disabled={isReviewing}
                           className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                             step.status === "rejected"
                               ? "bg-red-500 text-white cursor-default"
-                              : "bg-red-100 text-red-700 hover:bg-red-200"
+                              : "bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50"
                           }`}
                         >
-                          <XCircle size={16} />
+                          {isReviewing ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
                           Rechazar
                         </button>
                       </div>
@@ -481,6 +563,29 @@ export default function ContractorDetailClient({ id }: Props) {
           })}
         </div>
       </div>
+
+      {/* Activity Log */}
+      {detail.onboardingEvents.length > 0 && (
+        <div className="rounded-3xl bg-[#e8eaf0] p-8 shadow-xl">
+          <h2 className="text-2xl font-bold mb-6">Actividad reciente</h2>
+          <div className="space-y-3">
+            {detail.onboardingEvents.slice(0, 10).map((event) => (
+              <div key={event.id} className="flex items-start gap-3 rounded-lg bg-white/50 p-4">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Clock size={14} className="text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-700">{event.description || event.event_type}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {new Date(event.created_at).toLocaleString("es-ES", { dateStyle: "long", timeStyle: "short" })}
+                    {event.performed_by_email && ` — por ${event.performed_by_email}`}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

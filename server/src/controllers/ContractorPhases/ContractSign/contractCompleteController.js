@@ -19,6 +19,25 @@ export const contractComplete = async (userData) => {
     [profileId],
   );
 
+  // Actualizar o insertar en contracts
+  const existingContract = await db.query(
+    "SELECT id FROM contracts WHERE contractor_profile_id = $1",
+    [profileId],
+  );
+  if (existingContract.rows.length > 0) {
+    await db.query(
+      `UPDATE contracts SET signed = true, signed_at = NOW()
+       WHERE contractor_profile_id = $1`,
+      [profileId],
+    );
+  } else {
+    await db.query(
+      `INSERT INTO contracts (contractor_profile_id, signed, signed_at)
+       VALUES ($1, true, NOW())`,
+      [profileId],
+    );
+  }
+
   await db.query(
     `INSERT INTO onboarding_events (contractor_profile_id, event_type, description)
      VALUES ($1, 'CONTRACT_SIGNED', 'Contract signed')`,
